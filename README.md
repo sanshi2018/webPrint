@@ -55,6 +55,28 @@ This project implements the backend for a network printer program according to t
 - [x] Printer capability validation
 - [x] Temporary file cleanup after printing
 
+### ✅ 4.1 Print Task Status Query Interface
+- [x] Alternative endpoint: `GET /api/print/status/{taskId}` as per PRD specification
+- [x] Enhanced detailed endpoint: `GET /api/print/task/{taskId}/status`
+- [x] Comprehensive task information including progress calculation
+- [x] Standardized error responses for task not found (404)
+- [x] Input validation with proper exception handling
+
+### ✅ 4.2 Error Code Integration and Enhancement
+- [x] Global exception handler using @ControllerAdvice
+- [x] Complete error code mapping (1000, 2001-2003, 3001-3006, 4001, 5000)
+- [x] Consistent HTTP status code mapping
+- [x] Custom exceptions (PrintTaskException, TaskNotFoundException)
+- [x] Detailed error logging for failed tasks
+- [x] User-friendly error messages for frontend display
+
+### ✅ 4.3 Code Optimization and Documentation
+- [x] Comprehensive Javadoc documentation for all classes and methods
+- [x] Code cleanup and removal of redundant code
+- [x] Enhanced Swagger/OpenAPI documentation
+- [x] Consistent coding standards and best practices
+- [x] Improved error handling throughout the application
+
 ## 🏗️ Project Structure
 
 ```
@@ -70,6 +92,10 @@ src/main/java/com/sanshi/webprint/
 │   └── PdfPrintService.java         # PDF printing using Apache PDFBox
 ├── entity/
 │   └── PrintTask.java               # Print task entity with status tracking
+├── exception/
+│   ├── GlobalExceptionHandler.java  # Centralized exception handling
+│   ├── PrintTaskException.java      # Custom print task exceptions
+│   └── TaskNotFoundException.java   # Task not found exception
 └── dto/
     ├── PrinterDto.java               # Printer data transfer object
     ├── PrintRequestDto.java          # Print request parameters
@@ -194,21 +220,30 @@ src/main/java/com/sanshi/webprint/
   }
   ```
 
-### Get Task Status by ID
-- **Endpoint**: `GET /api/print/task/{taskId}/status`
-- **Description**: Get the status of a specific print task
+### Get Print Task Status (Alternative Endpoint)
+- **Endpoint**: `GET /api/print/status/{taskId}` 
+- **Description**: Get the status of a specific print task (PRD 4.1 specification)
 - **Response Format**:
   ```json
   {
     "taskId": "550e8400-e29b-41d4-a716-446655440000",
     "status": "COMPLETED",
+    "message": null,
+    "progress": 100,
     "fileType": "PDF",
     "printerId": "HP LaserJet M1005",
     "copies": 2,
-    "submitTime": "2024-01-01T12:00:00",
-    "errorMessage": null
+    "paperSize": "A4",
+    "duplex": "simplex",
+    "colorMode": "grayscale",
+    "submitTime": "2024-01-01T12:00:00"
   }
   ```
+
+### Get Task Status by ID (Detailed)
+- **Endpoint**: `GET /api/print/task/{taskId}/status`
+- **Description**: Get detailed status of a specific print task
+- **Response Format**: Same as above with comprehensive task information
 - **Error Response** (404):
   ```json
   {
@@ -290,7 +325,10 @@ curl -X POST http://localhost:8080/api/print/upload \
 # Get print queue status
 curl -X GET http://localhost:8080/api/print/queue/status
 
-# Get task status by ID (replace with actual task ID)
+# Get task status by ID (PRD 4.1 alternative endpoint)
+curl -X GET http://localhost:8080/api/print/status/550e8400-e29b-41d4-a716-446655440000
+
+# Get detailed task status by ID
 curl -X GET http://localhost:8080/api/print/task/550e8400-e29b-41d4-a716-446655440000/status
 
 # Health check
@@ -363,6 +401,25 @@ curl -X GET http://localhost:8080/actuator/health
 - ✅ Paper size support (A4, Letter, A3, Legal)
 - ✅ Real-time status tracking during print process
 - ✅ Temporary file cleanup after completion
+
+## 📊 Error Code Reference
+
+The application uses standardized error codes for consistent error handling:
+
+| Error Code | HTTP Status | Meaning | Description |
+|:--------:|:----------:|:------:|:-----------|
+| **1000** | 200 OK | Success | Request processed successfully |
+| **2001** | 400 Bad Request | Unsupported File Format | File is not PDF/DOC/DOCX |
+| **2002** | 413 Payload Too Large | File Too Large | File exceeds 50MB limit |
+| **2003** | 500 Internal Server Error | File Upload Failed | File operation error |
+| **3001** | 404 Not Found | Printer Not Found | Printer unavailable |
+| **3002** | 503 Service Unavailable | Printer Offline | Printer not responding |
+| **3003** | 500 Internal Server Error | Print Task Failed | Printing operation failed |
+| **3004** | 503 Service Unavailable | Paper/Jam Error | Paper issues detected |
+| **3005** | 503 Service Unavailable | Supply Issues | Low ink/toner |
+| **3006** | 400 Bad Request | Task Canceled | Print job canceled |
+| **4001** | 400 Bad Request | Invalid Parameters | Missing/invalid request data |
+| **5000** | 500 Internal Server Error | Internal Error | Unknown system error |
 
 ## 🔒 Network Configuration
 

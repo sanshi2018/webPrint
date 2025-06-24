@@ -12,7 +12,24 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Service for printer operations
+ * Service for printer discovery and management operations
+ * 
+ * This service provides functionality to discover and manage printers available
+ * on the system using the Java Print Service API. It handles printer enumeration,
+ * status checking, and provides printer information for client applications.
+ * 
+ * <p>The service uses {@link java.awt.print.PrinterJob#lookupPrintServices()} to
+ * discover available print services and wraps them in DTOs for consistent API responses.</p>
+ * 
+ * <p>Current implementation provides MVP functionality with basic printer status.
+ * Future enhancements may include real-time status monitoring, capability detection,
+ * and advanced printer management features.</p>
+ * 
+ * @author WebPrint Team
+ * @version 1.0
+ * @since 1.0
+ * @see java.awt.print.PrinterJob
+ * @see javax.print.PrintService
  */
 @Service
 public class PrinterService {
@@ -21,8 +38,26 @@ public class PrinterService {
     
     /**
      * Retrieve all available printers from the system
-     * @return List of PrinterDto objects
-     * @throws RuntimeException if unable to retrieve printer services
+     * 
+     * This method discovers all print services available on the current system using
+     * the Java Print Service API. Each discovered printer is wrapped in a PrinterDto
+     * with standardized information for client consumption.
+     * 
+     * <p>The method performs the following operations:</p>
+     * <ol>
+     *   <li>Calls {@link java.awt.print.PrinterJob#lookupPrintServices()} to discover printers</li>
+     *   <li>Filters out null or invalid print services</li>
+     *   <li>Creates PrinterDto objects with id, name, and status information</li>
+     *   <li>Returns the complete list of available printers</li>
+     * </ol>
+     * 
+     * <p>Status is currently set to "Ready" for all printers (MVP implementation).
+     * Future versions may include real-time status detection.</p>
+     * 
+     * @return List of PrinterDto objects representing available printers
+     * @throws RuntimeException if unable to retrieve printer services from the system
+     * @see PrinterDto
+     * @see java.awt.print.PrinterJob#lookupPrintServices()
      */
     public List<PrinterDto> getAvailablePrinters() {
         logger.info("Retrieving available printers from system");
