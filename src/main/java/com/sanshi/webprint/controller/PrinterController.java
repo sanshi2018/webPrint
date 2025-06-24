@@ -31,6 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -223,7 +224,7 @@ public class PrinterController {
         @RequestParam(value = "duplex", defaultValue = "simplex") String duplex,
         @Parameter(description = "Color mode", example = "grayscale")
         @RequestParam(value = "colorMode", defaultValue = "grayscale") String colorMode
-    ) {
+    ) throws IOException {
         logger.info("Received file upload request: file={}, printer={}, copies={}", 
                    file.getOriginalFilename(), printerId, copies);
         

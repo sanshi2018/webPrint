@@ -32,10 +32,17 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
      * Handle file upload size exceeded exceptions
      * 
      * @param ex The MaxUploadSizeExceededException
+     * @param headers The headers to use for the response
+     * @param status The status code to use for the response
+     * @param request The web request
      * @return ResponseEntity with error code 2002
      */
-    @ExceptionHandler(MaxUploadSizeExceededException.class)
-    public ResponseEntity<ErrorResponseDto> handleMaxUploadSizeExceeded(MaxUploadSizeExceededException ex) {
+    @Override
+    protected ResponseEntity<Object> handleMaxUploadSizeExceededException(
+            MaxUploadSizeExceededException ex,
+            org.springframework.http.HttpHeaders headers,
+            org.springframework.http.HttpStatusCode status,
+            org.springframework.web.context.request.WebRequest request) {
         logger.warn("File upload size exceeded: {}", ex.getMessage());
         ErrorResponseDto error = new ErrorResponseDto(2002, "File size exceeds the maximum limit of 50MB.");
         return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(error);
