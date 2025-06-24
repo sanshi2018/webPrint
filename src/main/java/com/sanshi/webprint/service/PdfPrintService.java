@@ -1,6 +1,7 @@
 package com.sanshi.webprint.service;
 
 import com.sanshi.webprint.entity.PrintTask;
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.printing.PDFPageable;
 import org.slf4j.Logger;
@@ -39,8 +40,8 @@ public class PdfPrintService {
         if (!pdfFile.exists()) {
             throw new IOException("PDF file not found: " + task.getFilePath());
         }
-        
-        try (PDDocument document = PDDocument.load(pdfFile)) {
+
+        try (PDDocument document = Loader.loadPDF(pdfFile)) {
             // Find the target printer
             PrintService printService = findPrintService(task.getPrinterId());
             if (printService == null) {
