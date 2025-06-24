@@ -169,6 +169,8 @@ This development plan aims to provide detailed task breakdown and timeline guida
   - 在后端日志中，能够看到新的打印任务被创建并成功加入队列的日志信息。
   - 通过调试或简单的日志输出，验证队列中任务的顺序和 `PrintTask` 对象的正确性。
 
+No need to perform any Maven-related tasks, I will execute it manually.
+
 ## Phase 2: File Upload and Print Task Enqueue (Sprint 2: Estimated X Days)
 
 **Objective:** Implement file upload functionality, including format validation, size restrictions, and encapsulating valid print requests into tasks for queueing.
