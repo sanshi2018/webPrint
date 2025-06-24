@@ -7,6 +7,7 @@ import com.sanshi.webprint.dto.UploadResponseDto;
 import com.sanshi.webprint.service.PrinterService;
 import com.sanshi.webprint.service.FileService;
 import com.sanshi.webprint.service.PrintQueueService;
+import com.sanshi.webprint.service.PrintTaskScheduler;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -48,6 +49,9 @@ public class PrinterController {
     
     @Autowired
     private PrintQueueService printQueueService;
+    
+    @Autowired
+    private PrintTaskScheduler printTaskScheduler;
     
     /**
      * Get all available printers
@@ -209,6 +213,105 @@ public class PrinterController {
         } catch (Exception e) {
             logger.error("Error processing file upload", e);
             ErrorResponseDto errorResponse = new ErrorResponseDto(2003, "Failed to save file: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
+    
+    /**
+     * Get print queue status and statistics
+     * @return Queue status information
+     */
+    @GetMapping("/queue/status")
+    @Operation(
+        summary = "Get print queue status",
+        description = "Retrieve current print queue status and statistics"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Successfully retrieved queue status",
+            content = @Content(mediaType = "application/json")
+        )
+    })
+    public ResponseEntity<?> getQueueStatus() {
+        logger.info("Received request for queue status");
+        
+        try {
+            String queueStats = printQueueService.getQueueStats();
+            String schedulerStatus = printTaskScheduler.getSchedulerStatus();
+            
+            // Create a simple status response
+            java.util.Map<String, Object> status = new java.util.HashMap<>();
+            status.put("timestamp", java.time.LocalDateTime.now());
+            status.put("queueSize", printQueueService.getQueueSize());
+            status.put("queueStats", queueStats);
+            status.put("schedulerStatus", schedulerStatus);
+            status.put("isProcessing", printTaskScheduler.isCurrentlyProcessing());
+            
+            return ResponseEntity.ok(status);
+            
+        } catch (Exception e) {
+            logger.error("Error retrieving queue status", e);
+            ErrorResponseDto errorResponse = new ErrorResponseDto(5001, "Failed to retrieve queue status");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
+    
+    /**
+     * Get task status by ID
+     * @param taskId The task ID to look up
+     * @return Task status information
+     */
+    @GetMapping("/task/{taskId}/status")
+    @Operation(
+        summary = "Get task status by ID",
+        description = "Retrieve the status of a specific print task"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Successfully retrieved task status",
+            content = @Content(mediaType = "application/json")
+        ),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Task not found",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = ErrorResponseDto.class)
+            )
+        )
+    })
+    public ResponseEntity<?> getTaskStatus(
+        @Parameter(description = "Task ID", required = true)
+        @org.springframework.web.bind.annotation.PathVariable String taskId
+    ) {
+        logger.info("Received request for task status: {}", taskId);
+        
+        try {
+            com.sanshi.webprint.entity.PrintTask task = printQueueService.getTaskById(taskId);
+            
+            if (task == null) {
+                logger.warn("Task not found: {}", taskId);
+                ErrorResponseDto errorResponse = new ErrorResponseDto(4001, "Task not found: " + taskId);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+            }
+            
+            // Create task status response
+            java.util.Map<String, Object> taskStatus = new java.util.HashMap<>();
+            taskStatus.put("taskId", task.getTaskId());
+            taskStatus.put("status", task.getStatus());
+            taskStatus.put("fileType", task.getFileType());
+            taskStatus.put("printerId", task.getPrinterId());
+            taskStatus.put("copies", task.getCopies());
+            taskStatus.put("submitTime", task.getSubmitTime());
+            taskStatus.put("errorMessage", task.getErrorMessage());
+            
+            return ResponseEntity.ok(taskStatus);
+            
+        } catch (Exception e) {
+            logger.error("Error retrieving task status for {}", taskId, e);
+            ErrorResponseDto errorResponse = new ErrorResponseDto(5002, "Failed to retrieve task status");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }

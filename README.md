@@ -38,6 +38,23 @@ This project implements the backend for a network printer program according to t
 - [x] Success response with error code 1000 and taskId
 - [x] Comprehensive queue statistics and monitoring
 
+### ✅ 3.1 Print Task Scheduler
+- [x] Background scheduled service using @Scheduled annotation
+- [x] Concurrency control with AtomicBoolean to prevent parallel processing
+- [x] FIFO task processing with status updates (PENDING → PROCESSING → PRINTING → COMPLETED/FAILED)
+- [x] Automatic file cleanup after task completion
+- [x] Robust error handling preventing scheduler crashes
+- [x] Real-time queue monitoring and statistics
+
+### ✅ 3.2 PDF File Printing Logic
+- [x] PdfPrintService using Apache PDFBox for PDF processing
+- [x] Complete print parameter mapping (copies, paper size, duplex, color mode)
+- [x] PrinterJob integration with PrintRequestAttributeSet
+- [x] Paper size support (A4, Letter, A3, Legal)
+- [x] Status tracking throughout print process
+- [x] Printer capability validation
+- [x] Temporary file cleanup after printing
+
 ## 🏗️ Project Structure
 
 ```
@@ -48,7 +65,9 @@ src/main/java/com/sanshi/webprint/
 ├── service/
 │   ├── PrinterService.java          # Business logic for printer operations
 │   ├── FileService.java             # File upload, validation, and storage operations
-│   └── PrintQueueService.java       # Print task queue management
+│   ├── PrintQueueService.java       # Print task queue management
+│   ├── PrintTaskScheduler.java      # Scheduled print task processing
+│   └── PdfPrintService.java         # PDF printing using Apache PDFBox
 ├── entity/
 │   └── PrintTask.java               # Print task entity with status tracking
 └── dto/
@@ -161,6 +180,44 @@ src/main/java/com/sanshi/webprint/
     }
     ```
 
+### Get Print Queue Status
+- **Endpoint**: `GET /api/print/queue/status`
+- **Description**: Get current print queue status and statistics
+- **Response Format**:
+  ```json
+  {
+    "timestamp": "2024-01-01T12:00:00",
+    "queueSize": 3,
+    "queueStats": "Queue Stats - Total: 5, Pending: 1, Processing: 1, Completed: 2, Failed: 1",
+    "schedulerStatus": "Print Task Scheduler - Processing: YES, Queue: ...",
+    "isProcessing": true
+  }
+  ```
+
+### Get Task Status by ID
+- **Endpoint**: `GET /api/print/task/{taskId}/status`
+- **Description**: Get the status of a specific print task
+- **Response Format**:
+  ```json
+  {
+    "taskId": "550e8400-e29b-41d4-a716-446655440000",
+    "status": "COMPLETED",
+    "fileType": "PDF",
+    "printerId": "HP LaserJet M1005",
+    "copies": 2,
+    "submitTime": "2024-01-01T12:00:00",
+    "errorMessage": null
+  }
+  ```
+- **Error Response** (404):
+  ```json
+  {
+    "code": 4001,
+    "message": "Task not found: [taskId]",
+    "timestamp": "2024-01-01T12:00:00"
+  }
+  ```
+
 ### Health Check
 - **Endpoint**: `GET /actuator/health`
 - **Description**: Application health status
@@ -230,6 +287,12 @@ curl -X POST http://localhost:8080/api/print/upload \
   -F "duplex=simplex" \
   -F "colorMode=grayscale"
 
+# Get print queue status
+curl -X GET http://localhost:8080/api/print/queue/status
+
+# Get task status by ID (replace with actual task ID)
+curl -X GET http://localhost:8080/api/print/task/550e8400-e29b-41d4-a716-446655440000/status
+
 # Health check
 curl -X GET http://localhost:8080/actuator/health
 ```
@@ -286,6 +349,21 @@ curl -X GET http://localhost:8080/actuator/health
 - ✅ Logs task creation and queue status changes
 - ✅ Maintains task order and thread-safe queue operations
 
+### 3.1 Print Task Scheduler:
+- ✅ Background scheduler runs every 2 seconds checking for tasks
+- ✅ Concurrency control prevents parallel task processing
+- ✅ Status updates: PENDING → PROCESSING → PRINTING → COMPLETED/FAILED
+- ✅ Automatic cleanup of completed/failed tasks and temporary files
+- ✅ Robust error handling prevents scheduler crashes
+
+### 3.2 PDF File Printing:
+- ✅ Apache PDFBox integration for PDF processing
+- ✅ Complete print parameter mapping (copies, paper size, duplex, color)
+- ✅ Printer capability validation before printing
+- ✅ Paper size support (A4, Letter, A3, Legal)
+- ✅ Real-time status tracking during print process
+- ✅ Temporary file cleanup after completion
+
 ## 🔒 Network Configuration
 
 Ensure the following for proper operation:
@@ -300,13 +378,48 @@ The application logs to both console and file:
 - **File**: `logs/webprint.log` with detailed information
 - **Levels**: INFO for application flow, ERROR for exceptions
 
-## 🚧 Future Enhancements (Phase 2+)
+## 🔄 Print Task Lifecycle
 
-- File upload functionality  
-- Advanced printer status detection
-- Print job management
-- Queue monitoring
-- Enhanced error handling and retry mechanisms
+The print task processing follows this workflow:
+
+1. **File Upload**: User uploads file via `/api/print/upload`
+2. **Task Creation**: System creates PrintTask with PENDING status
+3. **Queue Entry**: Task enters FIFO queue managed by PrintQueueService
+4. **Scheduler Processing**: PrintTaskScheduler picks up PENDING tasks every 2 seconds
+5. **Status Updates**: 
+   - PENDING → PROCESSING (when picked up by scheduler)
+   - PROCESSING → PRINTING (when sent to printer)
+   - PRINTING → COMPLETED (successful print) or FAILED (print error)
+6. **Cleanup**: Temporary files deleted after COMPLETED/FAILED status
+7. **Monitoring**: Real-time status available via `/api/print/task/{taskId}/status`
+
+## 🖨️ Supported Print Features
+
+### **Paper Sizes:**
+- A4 (210 × 297 mm)
+- Letter (8.5 × 11 inches)
+- A3 (297 × 420 mm)
+- Legal (8.5 × 14 inches)
+
+### **Print Modes:**
+- **Duplex**: Simplex (single-sided) or Duplex (double-sided)
+- **Color**: Color or Monochrome/Grayscale
+- **Copies**: 1-999 copies per job
+- **Quality**: Normal print quality
+
+### **File Types:**
+- **PDF**: Full support with Apache PDFBox
+- **Word Documents**: .doc/.docx (planned - not yet implemented)
+
+## 🚧 Future Enhancements (Phase 4+)
+
+- Word document printing implementation
+- Advanced printer status detection (online/offline/paper jam)
+- Print job retry mechanisms
+- Print queue prioritization
+- Email notifications for print completion
+- Print history and analytics
+- Multi-user print quotas
 
 ## 🤝 Contributing
 
