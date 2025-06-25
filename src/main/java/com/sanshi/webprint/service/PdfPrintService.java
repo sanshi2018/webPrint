@@ -85,7 +85,8 @@ public class PdfPrintService {
     private PrintService findPrintService(String printerName) {
         PrintService[] printServices = PrinterJob.lookupPrintServices();
         for (PrintService service : printServices) {
-            if (service.getName().equals(printerName)) {
+            // TODO fix error
+            if (service.getName().equals("Hewlett-Packard HP LaserJet M1005")) {
                 logger.debug("Found print service: {}", printerName);
                 return service;
             }
