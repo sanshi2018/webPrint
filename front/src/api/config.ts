@@ -22,7 +22,7 @@ export interface ApiConfig {
  * Can be overridden by environment variables or runtime configuration
  */
 export const defaultApiConfig: ApiConfig = {
-  baseUrl: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080',
+  baseUrl: import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8080',
   timeout: 30000,
   enableLogging: import.meta.env.DEV || false,
   apiVersion: '/api',
@@ -38,9 +38,9 @@ export const API_ENDPOINTS = {
   
   // Printer management endpoints
   PRINTERS: {
-    LIST: '/printers',
-    DETAIL: (id: string) => `/printers/${id}`,
-    STATUS: (id: string) => `/printers/${id}/status`,
+    LIST: '/print/printers',
+    DETAIL: (id: string) => `/print/printers/${id}`,
+    STATUS: (id: string) => `/print/printers/${id}/status`,
   },
   
   // Print job management endpoints
@@ -70,8 +70,8 @@ export const API_ENDPOINTS = {
   
   // File upload endpoints
   UPLOAD: {
-    FILE: '/upload/file',
-    VALIDATE: '/upload/validate',
+    FILE: '/print/upload/file',
+    VALIDATE: '/print/upload/validate',
   },
 } as const
 
@@ -142,19 +142,19 @@ export const updateApiConfig = (config: Partial<ApiConfig>): void => {
  */
 export const ENV_CONFIGS = {
   development: {
-    baseUrl: 'http://localhost:8080',
+    baseUrl: 'http://127.0.0.1:8080',
     timeout: 30000,
     enableLogging: true,
     apiVersion: '/api',
   },
   staging: {
-    baseUrl: 'http://localhost:8080',
+    baseUrl: 'http://127.0.0.1:8080',
     timeout: 30000,
     enableLogging: true,
     apiVersion: '/api',
   },
   production: {
-    baseUrl: 'http://localhost',
+    baseUrl: 'http://127.0.0.1',
     timeout: 30000,
     enableLogging: false,
     apiVersion: '/api',
