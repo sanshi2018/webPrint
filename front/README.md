@@ -29,7 +29,7 @@ Before running this project, ensure you have:
 
 - Node.js (v18+ recommended)
 - npm or yarn package manager
-- WebPrint backend service running on `localhost:8080`
+- WebPrint backend service running on `127.0.0.1:8080`
 
 ## 🚦 Getting Started
 
@@ -46,7 +46,7 @@ npm install
 
 ### 2. Environment Setup
 
-The application is pre-configured to connect to the backend at `http://localhost:8080`. If your backend runs on a different port, update the proxy configuration in `vite.config.ts`.
+The application is pre-configured to connect to the backend at `http://127.0.0.1:8080`. If your backend runs on a different port, update the proxy configuration in `vite.config.ts`.
 
 ### 3. Development
 
@@ -54,7 +54,7 @@ The application is pre-configured to connect to the backend at `http://localhost
 # Start development server
 npm run dev
 
-# The application will be available at http://localhost:5173
+# The application will be available at http://127.0.0.1:5173
 ```
 
 ### 4. Build for Production
@@ -196,7 +196,7 @@ The application handles these error codes:
 ### Common Issues
 
 1. **Backend Connection Failed**
-   - Ensure backend is running on `localhost:8080`
+   - Ensure backend is running on `127.0.0.1:8080`
    - Check proxy configuration in `vite.config.ts`
 
 2. **File Upload Errors**

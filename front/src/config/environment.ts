@@ -69,7 +69,7 @@ export const environment = {
   /** Application environment */
   APP_ENV: getEnvVar('VITE_APP_ENV', 'development'),
   /** API base URL */
-  API_BASE_URL: getEnvVar('VITE_API_BASE_URL', 'http://localhost:8080'),
+  API_BASE_URL: getEnvVar('VITE_API_BASE_URL', 'http://127.0.0.1:8080'),
   /** API logging enabled */
   API_LOGGING: getBooleanEnvVar('VITE_API_LOGGING', import.meta.env.DEV || false),
   /** API timeout */
@@ -106,17 +106,17 @@ export const getCurrentEnvironment = (): 'development' | 'staging' | 'production
  */
 export const environmentConfig = {
   development: {
-    apiBaseUrl: 'http://localhost:8080',
+    apiBaseUrl: 'http://127.0.0.1:8080',
     enableLogging: true,
     timeout: 30000,
   },
   staging: {
-    apiBaseUrl: 'http://localhost:8080',
+    apiBaseUrl: 'http://127.0.0.1:8080',
     enableLogging: true,
     timeout: 30000,
   },
   production: {
-    apiBaseUrl: 'http://localhost',
+    apiBaseUrl: 'http://127.0.0.1',
     enableLogging: false,
     timeout: 30000,
   },

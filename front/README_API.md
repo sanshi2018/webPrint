@@ -38,7 +38,7 @@ Create a `.env` file in the project root:
 
 ```bash
 # API Configuration
-VITE_API_BASE_URL=http://localhost:8080
+VITE_API_BASE_URL=http://127.0.0.1:8080
 VITE_APP_ENV=development
 VITE_API_LOGGING=true
 VITE_API_TIMEOUT=30000
@@ -51,15 +51,15 @@ The system comes with three predefined environments:
 
 ```typescript
 // Development (default)
-baseUrl: 'http://localhost:8080'
+baseUrl: 'http://127.0.0.1:8080'
 enableLogging: true
 
 // Staging
-baseUrl: 'http://localhost:8080'
+baseUrl: 'http://127.0.0.1:8080'
 enableLogging: true
 
 // Production
-baseUrl: 'http://localhost'
+baseUrl: 'http://127.0.0.1'
 enableLogging: false
 ```
 
@@ -246,7 +246,7 @@ For edge cases, you can use the endpoint builder directly:
 import { getApiUrl, API_ENDPOINTS } from '../api/config'
 
 const customUrl = getApiUrl(API_ENDPOINTS.TASKS.STATUS('task-123'))
-// Returns: "http://localhost:8080/api/print/task/task-123/status"
+// Returns: "http://127.0.0.1:8080/api/print/task/task-123/status"
 ```
 
 ### Safe API Calls
