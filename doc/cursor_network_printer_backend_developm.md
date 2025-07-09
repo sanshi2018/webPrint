@@ -2307,9 +2307,9 @@ import java.io.IOException;
  */
 @Service
 public class PdfPrintService {
-    
+
     private static final Logger logger = LoggerFactory.getLogger(PdfPrintService.class);
-    
+
     /**
      * Print a PDF file with specified parameters
      * @param task The print task containing file path and print parameters
@@ -2318,48 +2318,48 @@ public class PdfPrintService {
      */
     public void printPdf(PrintTask task) throws IOException, PrinterException {
         logger.info("Starting PDF print job for task: {}", task.getTaskId());
-        
+
         File pdfFile = new File(task.getFilePath());
         if (!pdfFile.exists()) {
             throw new IOException("PDF file not found: " + task.getFilePath());
         }
-        
+
         try (PDDocument document = PDDocument.load(pdfFile)) {
             // Find the target printer
-            PrintService printService = findPrintService(task.getPrinterId());
+            PrintService printService = findPrintService(task.getPrinterName());
             if (printService == null) {
-                throw new PrinterException("Printer not found: " + task.getPrinterId());
+                throw new PrinterException("Printer not found: " + task.getPrinterName());
             }
-            
+
             // Create printer job
             PrinterJob printerJob = PrinterJob.getPrinterJob();
             printerJob.setPrintService(printService);
-            
+
             // Set up page format and paper size
             PageFormat pageFormat = setupPageFormat(task.getPaperSize());
-            
+
             // Create print attributes
             PrintRequestAttributeSet attributes = createPrintAttributes(task);
-            
+
             // Set up the document for printing
             PDFPageable pageable = new PDFPageable(document);
             printerJob.setPageable(pageable);
-            
+
             logger.info("Submitting print job to printer: {} (copies: {}, paper: {}, duplex: {}, color: {})",
-                    task.getPrinterId(), task.getCopies(), task.getPaperSize(), 
+                    task.getPrinterName(), task.getCopies(), task.getPaperSize(),
                     task.getDuplex(), task.getColorMode());
-            
+
             // Execute the print job
             printerJob.print(attributes);
-            
+
             logger.info("PDF print job completed successfully for task: {}", task.getTaskId());
-            
+
         } catch (Exception e) {
             logger.error("Failed to print PDF for task: {}", task.getTaskId(), e);
             throw e;
         }
     }
-    
+
     /**
      * Find print service by name
      * @param printerName The name of the printer
@@ -2376,7 +2376,7 @@ public class PdfPrintService {
         logger.warn("Print service not found: {}", printerName);
         return null;
     }
-    
+
     /**
      * Set up page format with paper size
      * @param paperSize The paper size (A4, Letter, etc.)
@@ -2385,7 +2385,7 @@ public class PdfPrintService {
     private PageFormat setupPageFormat(String paperSize) {
         PageFormat pageFormat = new PageFormat();
         Paper paper = new Paper();
-        
+
         // Set paper dimensions based on paper size
         switch (paperSize.toUpperCase()) {
             case "A4":
@@ -2409,12 +2409,12 @@ public class PdfPrintService {
                 paper.setImageableArea(36, 36, 523, 770);
                 break;
         }
-        
+
         pageFormat.setPaper(paper);
         logger.debug("Page format set for paper size: {}", paperSize);
         return pageFormat;
     }
-    
+
     /**
      * Create print request attributes based on task parameters
      * @param task The print task
@@ -2422,13 +2422,13 @@ public class PdfPrintService {
      */
     private PrintRequestAttributeSet createPrintAttributes(PrintTask task) {
         PrintRequestAttributeSet attributes = new HashPrintRequestAttributeSet();
-        
+
         // Set number of copies
         if (task.getCopies() != null && task.getCopies() > 0) {
             attributes.add(new Copies(task.getCopies()));
             logger.debug("Set copies: {}", task.getCopies());
         }
-        
+
         // Set duplex mode
         if ("duplex".equalsIgnoreCase(task.getDuplex())) {
             attributes.add(Sides.DUPLEX);
@@ -2437,7 +2437,7 @@ public class PdfPrintService {
             attributes.add(Sides.ONE_SIDED);
             logger.debug("Set duplex mode: ONE_SIDED");
         }
-        
+
         // Set color mode
         if ("color".equalsIgnoreCase(task.getColorMode())) {
             attributes.add(Chromaticity.COLOR);
@@ -2446,20 +2446,20 @@ public class PdfPrintService {
             attributes.add(Chromaticity.MONOCHROME);
             logger.debug("Set color mode: MONOCHROME");
         }
-        
+
         // Set paper size
         MediaSizeName mediaSizeName = getMediaSizeName(task.getPaperSize());
         if (mediaSizeName != null) {
             attributes.add(mediaSizeName);
             logger.debug("Set media size: {}", mediaSizeName);
         }
-        
+
         // Set print quality
         attributes.add(PrintQuality.NORMAL);
-        
+
         return attributes;
     }
-    
+
     /**
      * Get MediaSizeName for paper size
      * @param paperSize The paper size string
@@ -2469,7 +2469,7 @@ public class PdfPrintService {
         if (paperSize == null) {
             return MediaSizeName.ISO_A4;
         }
-        
+
         switch (paperSize.toUpperCase()) {
             case "A4":
                 return MediaSizeName.ISO_A4;
@@ -2484,7 +2484,7 @@ public class PdfPrintService {
                 return MediaSizeName.ISO_A4;
         }
     }
-    
+
     /**
      * Check if a printer supports the required capabilities
      * @param printService The print service to check
@@ -2495,47 +2495,47 @@ public class PdfPrintService {
         if (printService == null) {
             return false;
         }
-        
+
         try {
             // Check if printer supports the required media size
             MediaSizeName mediaSizeName = getMediaSizeName(task.getPaperSize());
             if (mediaSizeName != null) {
                 boolean supportsMedia = printService.isAttributeValueSupported(
-                    mediaSizeName, null, null);
+                        mediaSizeName, null, null);
                 if (!supportsMedia) {
-                    logger.warn("Printer {} does not support media size: {}", 
-                              printService.getName(), task.getPaperSize());
+                    logger.warn("Printer {} does not support media size: {}",
+                            printService.getName(), task.getPaperSize());
                     return false;
                 }
             }
-            
+
             // Check duplex support if required
             if ("duplex".equalsIgnoreCase(task.getDuplex())) {
                 boolean supportsDuplex = printService.isAttributeValueSupported(
-                    Sides.DUPLEX, null, null);
+                        Sides.DUPLEX, null, null);
                 if (!supportsDuplex) {
-                    logger.warn("Printer {} does not support duplex printing", 
-                              printService.getName());
+                    logger.warn("Printer {} does not support duplex printing",
+                            printService.getName());
                     // Don't fail for duplex - fall back to simplex
                 }
             }
-            
+
             // Check color support if required
             if ("color".equalsIgnoreCase(task.getColorMode())) {
                 boolean supportsColor = printService.isAttributeValueSupported(
-                    Chromaticity.COLOR, null, null);
+                        Chromaticity.COLOR, null, null);
                 if (!supportsColor) {
-                    logger.warn("Printer {} does not support color printing", 
-                              printService.getName());
+                    logger.warn("Printer {} does not support color printing",
+                            printService.getName());
                     // Don't fail for color - fall back to monochrome
                 }
             }
-            
+
             return true;
-            
+
         } catch (Exception e) {
-            logger.error("Error checking printer capabilities for {}: {}", 
-                        printService.getName(), e.getMessage());
+            logger.error("Error checking printer capabilities for {}: {}",
+                    printService.getName(), e.getMessage());
             return false;
         }
     }
@@ -2565,21 +2565,21 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 @Service
 public class PrintTaskScheduler {
-    
+
     private static final Logger logger = LoggerFactory.getLogger(PrintTaskScheduler.class);
-    
+
     @Autowired
     private PrintQueueService printQueueService;
-    
+
     @Autowired
     private PdfPrintService pdfPrintService;
-    
+
     @Autowired
     private FileService fileService;
-    
+
     // Flag to prevent concurrent processing
     private final AtomicBoolean isProcessing = new AtomicBoolean(false);
-    
+
     /**
      * Scheduled method to process print tasks
      * Runs every 2 seconds to check for pending tasks
@@ -2591,7 +2591,7 @@ public class PrintTaskScheduler {
             logger.debug("Print task processing already in progress, skipping this cycle");
             return;
         }
-        
+
         try {
             // Check for pending tasks
             PrintTask task = findNextPendingTask();
@@ -2605,64 +2605,64 @@ public class PrintTaskScheduler {
             isProcessing.set(false);
         }
     }
-    
+
     /**
      * Find the next pending task in the queue
      * @return PrintTask or null if no pending tasks
      */
     private PrintTask findNextPendingTask() {
         PrintTask task = printQueueService.peekTask();
-        
+
         if (task == null) {
             logger.debug("No tasks in queue");
             return null;
         }
-        
+
         // Check if the task is pending
         if (task.getStatus() != PrintTask.TaskStatus.PENDING) {
             logger.debug("Next task is not pending (status: {}), checking for cleanup", task.getStatus());
-            
+
             // If task is completed or failed, remove it from queue and clean up
-            if (task.getStatus() == PrintTask.TaskStatus.COMPLETED || 
-                task.getStatus() == PrintTask.TaskStatus.FAILED) {
-                
+            if (task.getStatus() == PrintTask.TaskStatus.COMPLETED ||
+                    task.getStatus() == PrintTask.TaskStatus.FAILED) {
+
                 printQueueService.dequeueTask(); // Remove from queue
                 cleanupTaskFile(task);
                 logger.info("Cleaned up completed/failed task: {}", task.getTaskId());
-                
+
                 // Check for next task
                 return findNextPendingTask();
             }
-            
+
             return null;
         }
-        
+
         // Remove the pending task from queue and return it
         printQueueService.dequeueTask();
         logger.info("Found pending task for processing: {}", task.getTaskId());
         return task;
     }
-    
+
     /**
      * Process a single print task
      * @param task The task to process
      */
     private void processTask(PrintTask task) {
         logger.info("Processing print task: {} (file: {}, type: {}, printer: {})",
-                   task.getTaskId(), task.getFilePath(), task.getFileType(), task.getPrinterId());
-        
+                task.getTaskId(), task.getFilePath(), task.getFileType(), task.getPrinterName());
+
         try {
             // Update status to PROCESSING
             printQueueService.updateTaskStatus(task.getTaskId(), PrintTask.TaskStatus.PROCESSING, null);
-            
+
             // Validate file exists
             if (!fileExists(task.getFilePath())) {
                 throw new RuntimeException("File not found: " + task.getFilePath());
             }
-            
+
             // Update status to PRINTING
             printQueueService.updateTaskStatus(task.getTaskId(), PrintTask.TaskStatus.PRINTING, null);
-            
+
             // Process based on file type
             if ("PDF".equalsIgnoreCase(task.getFileType())) {
                 processPdfTask(task);
@@ -2671,11 +2671,11 @@ public class PrintTaskScheduler {
             } else {
                 throw new RuntimeException("Unsupported file type: " + task.getFileType());
             }
-            
+
             // Mark as completed
             printQueueService.updateTaskStatus(task.getTaskId(), PrintTask.TaskStatus.COMPLETED, null);
             logger.info("Print task completed successfully: {}", task.getTaskId());
-            
+
         } catch (Exception e) {
             // Mark as failed
             String errorMessage = "Print failed: " + e.getMessage();
@@ -2683,7 +2683,7 @@ public class PrintTaskScheduler {
             logger.error("Print task failed: {}", task.getTaskId(), e);
         }
     }
-    
+
     /**
      * Process a PDF print task
      * @param task The PDF task to process
@@ -2693,7 +2693,7 @@ public class PrintTaskScheduler {
         logger.info("Processing PDF print task: {}", task.getTaskId());
         pdfPrintService.printPdf(task);
     }
-    
+
     /**
      * Process a Word document print task
      * @param task The Word task to process
@@ -2705,7 +2705,7 @@ public class PrintTaskScheduler {
         // For now, throw an exception as Word printing is not yet implemented
         throw new RuntimeException("Word document printing not yet implemented");
     }
-    
+
     /**
      * Check if file exists
      * @param filePath Path to the file
@@ -2715,17 +2715,17 @@ public class PrintTaskScheduler {
         if (filePath == null || filePath.isEmpty()) {
             return false;
         }
-        
+
         File file = new File(filePath);
         boolean exists = file.exists() && file.isFile();
-        
+
         if (!exists) {
             logger.warn("File does not exist: {}", filePath);
         }
-        
+
         return exists;
     }
-    
+
     /**
      * Clean up temporary file after task completion
      * @param task The completed task
@@ -2734,7 +2734,7 @@ public class PrintTaskScheduler {
         if (task.getFilePath() == null || task.getFilePath().isEmpty()) {
             return;
         }
-        
+
         try {
             Path filePath = Paths.get(task.getFilePath());
             if (Files.exists(filePath)) {
@@ -2747,7 +2747,7 @@ public class PrintTaskScheduler {
             logger.error("Failed to clean up file: {}", task.getFilePath(), e);
         }
     }
-    
+
     /**
      * Get current processing status
      * @return true if currently processing a task
@@ -2755,7 +2755,7 @@ public class PrintTaskScheduler {
     public boolean isCurrentlyProcessing() {
         return isProcessing.get();
     }
-    
+
     /**
      * Force stop current processing (for emergency situations)
      */
@@ -2763,15 +2763,15 @@ public class PrintTaskScheduler {
         logger.warn("Force stopping print task processing");
         isProcessing.set(false);
     }
-    
+
     /**
      * Get scheduler statistics
      * @return Status string
      */
     public String getSchedulerStatus() {
         return String.format("Print Task Scheduler - Processing: %s, Queue: %s",
-                           isProcessing.get() ? "YES" : "NO",
-                           printQueueService.getQueueStats());
+                isProcessing.get() ? "YES" : "NO",
+                printQueueService.getQueueStats());
     }
 }
 ```
@@ -2807,115 +2807,121 @@ import com.sanshi.webprint.service.PrintTaskScheduler;
 Now let me add monitoring endpoints at the end of the controller:
 
 ```java
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).
+
+body(errorResponse);
         }
+                }
+                }
+
+                ->
+
+                return ResponseEntity.
+
+status(HttpStatus.INTERNAL_SERVER_ERROR).
+
+body(errorResponse);
+        }
+                }
+
+/**
+ * Get print queue status and statistics
+ * @return Queue status information
+ */
+@GetMapping("/queue/status")
+@Operation(
+        summary = "Get print queue status",
+        description = "Retrieve current print queue status and statistics"
+)
+@ApiResponses(value = {
+        @ApiResponse(
+                responseCode = "200",
+                description = "Successfully retrieved queue status",
+                content = @Content(mediaType = "application/json")
+        )
+})
+public ResponseEntity<?> getQueueStatus() {
+    logger.info("Received request for queue status");
+
+    try {
+        String queueStats = printQueueService.getQueueStats();
+        String schedulerStatus = printTaskScheduler.getSchedulerStatus();
+
+        // Create a simple status response
+        java.util.Map<String, Object> status = new java.util.HashMap<>();
+        status.put("timestamp", java.time.LocalDateTime.now());
+        status.put("queueSize", printQueueService.getQueueSize());
+        status.put("queueStats", queueStats);
+        status.put("schedulerStatus", schedulerStatus);
+        status.put("isProcessing", printTaskScheduler.isCurrentlyProcessing());
+
+        return ResponseEntity.ok(status);
+
+    } catch (Exception e) {
+        logger.error("Error retrieving queue status", e);
+        ErrorResponseDto errorResponse = new ErrorResponseDto(5001, "Failed to retrieve queue status");
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
     }
 }
 
-->
-
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
-        }
-    }
-    
-    /**
-     * Get print queue status and statistics
-     * @return Queue status information
-     */
-    @GetMapping("/queue/status")
-    @Operation(
-        summary = "Get print queue status",
-        description = "Retrieve current print queue status and statistics"
-    )
-    @ApiResponses(value = {
-        @ApiResponse(
-            responseCode = "200",
-            description = "Successfully retrieved queue status",
-            content = @Content(mediaType = "application/json")
-        )
-    })
-    public ResponseEntity<?> getQueueStatus() {
-        logger.info("Received request for queue status");
-        
-        try {
-            String queueStats = printQueueService.getQueueStats();
-            String schedulerStatus = printTaskScheduler.getSchedulerStatus();
-            
-            // Create a simple status response
-            java.util.Map<String, Object> status = new java.util.HashMap<>();
-            status.put("timestamp", java.time.LocalDateTime.now());
-            status.put("queueSize", printQueueService.getQueueSize());
-            status.put("queueStats", queueStats);
-            status.put("schedulerStatus", schedulerStatus);
-            status.put("isProcessing", printTaskScheduler.isCurrentlyProcessing());
-            
-            return ResponseEntity.ok(status);
-            
-        } catch (Exception e) {
-            logger.error("Error retrieving queue status", e);
-            ErrorResponseDto errorResponse = new ErrorResponseDto(5001, "Failed to retrieve queue status");
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
-        }
-    }
-    
-    /**
-     * Get task status by ID
-     * @param taskId The task ID to look up
-     * @return Task status information
-     */
-    @GetMapping("/task/{taskId}/status")
-    @Operation(
+/**
+ * Get task status by ID
+ * @param taskId The task ID to look up
+ * @return Task status information
+ */
+@GetMapping("/task/{taskId}/status")
+@Operation(
         summary = "Get task status by ID",
         description = "Retrieve the status of a specific print task"
-    )
-    @ApiResponses(value = {
+)
+@ApiResponses(value = {
         @ApiResponse(
-            responseCode = "200",
-            description = "Successfully retrieved task status",
-            content = @Content(mediaType = "application/json")
+                responseCode = "200",
+                description = "Successfully retrieved task status",
+                content = @Content(mediaType = "application/json")
         ),
         @ApiResponse(
-            responseCode = "404",
-            description = "Task not found",
-            content = @Content(
-                mediaType = "application/json",
-                schema = @Schema(implementation = ErrorResponseDto.class)
-            )
+                responseCode = "404",
+                description = "Task not found",
+                content = @Content(
+                        mediaType = "application/json",
+                        schema = @Schema(implementation = ErrorResponseDto.class)
+                )
         )
-    })
-    public ResponseEntity<?> getTaskStatus(
+})
+public ResponseEntity<?> getTaskStatus(
         @Parameter(description = "Task ID", required = true)
         @org.springframework.web.bind.annotation.PathVariable String taskId
-    ) {
-        logger.info("Received request for task status: {}", taskId);
-        
-        try {
-            com.sanshi.webprint.entity.PrintTask task = printQueueService.getTaskById(taskId);
-            
-            if (task == null) {
-                logger.warn("Task not found: {}", taskId);
-                ErrorResponseDto errorResponse = new ErrorResponseDto(4001, "Task not found: " + taskId);
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
-            }
-            
-            // Create task status response
-            java.util.Map<String, Object> taskStatus = new java.util.HashMap<>();
-            taskStatus.put("taskId", task.getTaskId());
-            taskStatus.put("status", task.getStatus());
-            taskStatus.put("fileType", task.getFileType());
-            taskStatus.put("printerId", task.getPrinterId());
-            taskStatus.put("copies", task.getCopies());
-            taskStatus.put("submitTime", task.getSubmitTime());
-            taskStatus.put("errorMessage", task.getErrorMessage());
-            
-            return ResponseEntity.ok(taskStatus);
-            
-        } catch (Exception e) {
-            logger.error("Error retrieving task status for {}", taskId, e);
-            ErrorResponseDto errorResponse = new ErrorResponseDto(5002, "Failed to retrieve task status");
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+) {
+    logger.info("Received request for task status: {}", taskId);
+
+    try {
+        com.sanshi.webprint.entity.PrintTask task = printQueueService.getTaskById(taskId);
+
+        if (task == null) {
+            logger.warn("Task not found: {}", taskId);
+            ErrorResponseDto errorResponse = new ErrorResponseDto(4001, "Task not found: " + taskId);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
         }
+
+        // Create task status response
+        java.util.Map<String, Object> taskStatus = new java.util.HashMap<>();
+        taskStatus.put("taskId", task.getTaskId());
+        taskStatus.put("status", task.getStatus());
+        taskStatus.put("fileType", task.getFileType());
+        taskStatus.put("printerId", task.getPrinterName());
+        taskStatus.put("copies", task.getCopies());
+        taskStatus.put("submitTime", task.getSubmitTime());
+        taskStatus.put("errorMessage", task.getErrorMessage());
+
+        return ResponseEntity.ok(taskStatus);
+
+    } catch (Exception e) {
+        logger.error("Error retrieving task status for {}", taskId, e);
+        ErrorResponseDto errorResponse = new ErrorResponseDto(5002, "Failed to retrieve task status");
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
     }
+}
 }
 ```
 
@@ -3790,190 +3796,190 @@ Now I'll add the alternative task status endpoint as specified in the PRD and up
 
 ```java
     /**
-     * Get task status by ID
-     * @param taskId The task ID to look up
-     * @return Task status information
-     */
-    @GetMapping("/task/{taskId}/status")
-    @Operation(
+ * Get task status by ID
+ * @param taskId The task ID to look up
+ * @return Task status information
+ */
+@GetMapping("/task/{taskId}/status")
+@Operation(
         summary = "Get task status by ID",
         description = "Retrieve the status of a specific print task"
-    )
-    @ApiResponses(value = {
+)
+@ApiResponses(value = {
         @ApiResponse(
-            responseCode = "200",
-            description = "Successfully retrieved task status",
-            content = @Content(mediaType = "application/json")
+                responseCode = "200",
+                description = "Successfully retrieved task status",
+                content = @Content(mediaType = "application/json")
         ),
         @ApiResponse(
-            responseCode = "404",
-            description = "Task not found",
-            content = @Content(
-                mediaType = "application/json",
-                schema = @Schema(implementation = ErrorResponseDto.class)
-            )
+                responseCode = "404",
+                description = "Task not found",
+                content = @Content(
+                        mediaType = "application/json",
+                        schema = @Schema(implementation = ErrorResponseDto.class)
+                )
         )
-    })
-    public ResponseEntity<?> getTaskStatus(
+})
+public ResponseEntity<?> getTaskStatus(
         @Parameter(description = "Task ID", required = true)
         @org.springframework.web.bind.annotation.PathVariable String taskId
-    ) {
-        logger.info("Received request for task status: {}", taskId);
-        
-        try {
-            com.sanshi.webprint.entity.PrintTask task = printQueueService.getTaskById(taskId);
-            
-            if (task == null) {
-                logger.warn("Task not found: {}", taskId);
-                ErrorResponseDto errorResponse = new ErrorResponseDto(4001, "Task not found: " + taskId);
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
-            }
-            
-            // Create task status response
-            java.util.Map<String, Object> taskStatus = new java.util.HashMap<>();
-            taskStatus.put("taskId", task.getTaskId());
-            taskStatus.put("status", task.getStatus());
-            taskStatus.put("fileType", task.getFileType());
-            taskStatus.put("printerId", task.getPrinterId());
-            taskStatus.put("copies", task.getCopies());
-            taskStatus.put("submitTime", task.getSubmitTime());
-            taskStatus.put("errorMessage", task.getErrorMessage());
-            
-            return ResponseEntity.ok(taskStatus);
-            
-        } catch (Exception e) {
-            logger.error("Error retrieving task status for {}", taskId, e);
-            ErrorResponseDto errorResponse = new ErrorResponseDto(5002, "Failed to retrieve task status");
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
-        }
-    }
+) {
+    logger.info("Received request for task status: {}", taskId);
 
-->
-
-    /**
-     * Get task status by ID (alternative endpoint as per PRD 4.1)
-     * 
-     * @param taskId The task ID to look up
-     * @return Task status information
-     */
-    @GetMapping("/status/{taskId}")
-    @Operation(
-        summary = "Get print task status",
-        description = "Retrieve the status of a specific print task by ID"
-    )
-    @ApiResponses(value = {
-        @ApiResponse(
-            responseCode = "200",
-            description = "Successfully retrieved task status",
-            content = @Content(mediaType = "application/json")
-        ),
-        @ApiResponse(
-            responseCode = "404",
-            description = "Task not found",
-            content = @Content(
-                mediaType = "application/json",
-                schema = @Schema(implementation = ErrorResponseDto.class)
-            )
-        )
-    })
-    public ResponseEntity<?> getTaskStatusByPath(
-        @Parameter(description = "Task ID", required = true)
-        @org.springframework.web.bind.annotation.PathVariable String taskId
-    ) {
-        logger.info("Received request for task status (alternative endpoint): {}", taskId);
-        return getTaskStatusInternal(taskId);
-    }
-    
-    /**
-     * Get task status by ID (detailed endpoint)
-     * 
-     * @param taskId The task ID to look up
-     * @return Task status information
-     */
-    @GetMapping("/task/{taskId}/status")
-    @Operation(
-        summary = "Get detailed task status by ID",
-        description = "Retrieve detailed status information of a specific print task"
-    )
-    @ApiResponses(value = {
-        @ApiResponse(
-            responseCode = "200",
-            description = "Successfully retrieved task status",
-            content = @Content(mediaType = "application/json")
-        ),
-        @ApiResponse(
-            responseCode = "404",
-            description = "Task not found",
-            content = @Content(
-                mediaType = "application/json",
-                schema = @Schema(implementation = ErrorResponseDto.class)
-            )
-        )
-    })
-    public ResponseEntity<?> getTaskStatus(
-        @Parameter(description = "Task ID", required = true)
-        @org.springframework.web.bind.annotation.PathVariable String taskId
-    ) {
-        logger.info("Received request for detailed task status: {}", taskId);
-        return getTaskStatusInternal(taskId);
-    }
-    
-    /**
-     * Internal method to get task status (shared implementation)
-     * 
-     * @param taskId The task ID to look up
-     * @return Task status information
-     */
-    private ResponseEntity<?> getTaskStatusInternal(String taskId) {
-        if (taskId == null || taskId.trim().isEmpty()) {
-            throw new IllegalArgumentException("Task ID cannot be null or empty");
-        }
-        
+    try {
         com.sanshi.webprint.entity.PrintTask task = printQueueService.getTaskById(taskId);
-        
+
         if (task == null) {
-            throw new TaskNotFoundException(taskId);
+            logger.warn("Task not found: {}", taskId);
+            ErrorResponseDto errorResponse = new ErrorResponseDto(4001, "Task not found: " + taskId);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
         }
-        
+
         // Create task status response
         java.util.Map<String, Object> taskStatus = new java.util.HashMap<>();
         taskStatus.put("taskId", task.getTaskId());
         taskStatus.put("status", task.getStatus());
-        taskStatus.put("message", task.getErrorMessage());
         taskStatus.put("fileType", task.getFileType());
-        taskStatus.put("printerId", task.getPrinterId());
+        taskStatus.put("printerId", task.getPrinterName());
         taskStatus.put("copies", task.getCopies());
-        taskStatus.put("paperSize", task.getPaperSize());
-        taskStatus.put("duplex", task.getDuplex());
-        taskStatus.put("colorMode", task.getColorMode());
         taskStatus.put("submitTime", task.getSubmitTime());
-        taskStatus.put("progress", calculateProgress(task.getStatus()));
-        
+        taskStatus.put("errorMessage", task.getErrorMessage());
+
         return ResponseEntity.ok(taskStatus);
+
+    } catch (Exception e) {
+        logger.error("Error retrieving task status for {}", taskId, e);
+        ErrorResponseDto errorResponse = new ErrorResponseDto(5002, "Failed to retrieve task status");
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
     }
-    
-    /**
-     * Calculate task progress based on status
-     * 
-     * @param status The current task status
-     * @return Progress percentage (0-100)
-     */
-    private int calculateProgress(com.sanshi.webprint.entity.PrintTask.TaskStatus status) {
-        switch (status) {
-            case PENDING:
-                return 0;
-            case PROCESSING:
-                return 25;
-            case PRINTING:
-                return 75;
-            case COMPLETED:
-                return 100;
-            case FAILED:
-                return -1; // Indicates failure
-            default:
-                return 0;
-        }
+}
+
+->
+
+/**
+ * Get task status by ID (alternative endpoint as per PRD 4.1)
+ *
+ * @param taskId The task ID to look up
+ * @return Task status information
+ */
+@GetMapping("/status/{taskId}")
+@Operation(
+        summary = "Get print task status",
+        description = "Retrieve the status of a specific print task by ID"
+)
+@ApiResponses(value = {
+        @ApiResponse(
+                responseCode = "200",
+                description = "Successfully retrieved task status",
+                content = @Content(mediaType = "application/json")
+        ),
+        @ApiResponse(
+                responseCode = "404",
+                description = "Task not found",
+                content = @Content(
+                        mediaType = "application/json",
+                        schema = @Schema(implementation = ErrorResponseDto.class)
+                )
+        )
+})
+public ResponseEntity<?> getTaskStatusByPath(
+        @Parameter(description = "Task ID", required = true)
+        @org.springframework.web.bind.annotation.PathVariable String taskId
+) {
+    logger.info("Received request for task status (alternative endpoint): {}", taskId);
+    return getTaskStatusInternal(taskId);
+}
+
+/**
+ * Get task status by ID (detailed endpoint)
+ *
+ * @param taskId The task ID to look up
+ * @return Task status information
+ */
+@GetMapping("/task/{taskId}/status")
+@Operation(
+        summary = "Get detailed task status by ID",
+        description = "Retrieve detailed status information of a specific print task"
+)
+@ApiResponses(value = {
+        @ApiResponse(
+                responseCode = "200",
+                description = "Successfully retrieved task status",
+                content = @Content(mediaType = "application/json")
+        ),
+        @ApiResponse(
+                responseCode = "404",
+                description = "Task not found",
+                content = @Content(
+                        mediaType = "application/json",
+                        schema = @Schema(implementation = ErrorResponseDto.class)
+                )
+        )
+})
+public ResponseEntity<?> getTaskStatus(
+        @Parameter(description = "Task ID", required = true)
+        @org.springframework.web.bind.annotation.PathVariable String taskId
+) {
+    logger.info("Received request for detailed task status: {}", taskId);
+    return getTaskStatusInternal(taskId);
+}
+
+/**
+ * Internal method to get task status (shared implementation)
+ *
+ * @param taskId The task ID to look up
+ * @return Task status information
+ */
+private ResponseEntity<?> getTaskStatusInternal(String taskId) {
+    if (taskId == null || taskId.trim().isEmpty()) {
+        throw new IllegalArgumentException("Task ID cannot be null or empty");
     }
+
+    com.sanshi.webprint.entity.PrintTask task = printQueueService.getTaskById(taskId);
+
+    if (task == null) {
+        throw new TaskNotFoundException(taskId);
+    }
+
+    // Create task status response
+    java.util.Map<String, Object> taskStatus = new java.util.HashMap<>();
+    taskStatus.put("taskId", task.getTaskId());
+    taskStatus.put("status", task.getStatus());
+    taskStatus.put("message", task.getErrorMessage());
+    taskStatus.put("fileType", task.getFileType());
+    taskStatus.put("printerId", task.getPrinterName());
+    taskStatus.put("copies", task.getCopies());
+    taskStatus.put("paperSize", task.getPaperSize());
+    taskStatus.put("duplex", task.getDuplex());
+    taskStatus.put("colorMode", task.getColorMode());
+    taskStatus.put("submitTime", task.getSubmitTime());
+    taskStatus.put("progress", calculateProgress(task.getStatus()));
+
+    return ResponseEntity.ok(taskStatus);
+}
+
+/**
+ * Calculate task progress based on status
+ *
+ * @param status The current task status
+ * @return Progress percentage (0-100)
+ */
+private int calculateProgress(com.sanshi.webprint.entity.PrintTask.TaskStatus status) {
+    switch (status) {
+        case PENDING:
+            return 0;
+        case PROCESSING:
+            return 25;
+        case PRINTING:
+            return 75;
+        case COMPLETED:
+            return 100;
+        case FAILED:
+            return -1; // Indicates failure
+        default:
+            return 0;
+    }
+}
 ```
 
 ## Step 4: Add Enhanced Javadoc Documentation to Core Classes

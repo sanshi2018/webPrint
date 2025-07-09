@@ -54,21 +54,21 @@ public class PrintQueueService {
      * Create and enqueue a print task
      * @param filePath Path to the file to print
      * @param fileType Type of file (PDF, WORD)
-     * @param printerId Target printer ID
+     * @param printerName Target printer ID
      * @param copies Number of copies
      * @param paperSize Paper size
      * @param duplex Duplex mode
      * @param colorMode Color mode
      * @return The task ID
      */
-    public String createAndEnqueueTask(String filePath, String fileType, String printerId, 
+    public String createAndEnqueueTask(String filePath, String fileType, String printerName,
                                      Integer copies, String paperSize, String duplex, String colorMode) {
         
         PrintTask task = new PrintTask(
             UUID.randomUUID().toString(),
             filePath,
             fileType,
-            printerId,
+            printerName,
             copies,
             paperSize,
             duplex,

@@ -21,7 +21,7 @@ public class PrintTask {
     private String taskId;
     private String filePath;
     private String fileType;
-    private String printerId;
+    private String printerName;
     private Integer copies;
     private String paperSize;
     private String duplex;
@@ -35,13 +35,13 @@ public class PrintTask {
         this.status = TaskStatus.PENDING;
     }
     
-    public PrintTask(String taskId, String filePath, String fileType, String printerId, 
+    public PrintTask(String taskId, String filePath, String fileType, String printerName,
                      Integer copies, String paperSize, String duplex, String colorMode) {
         this();
         this.taskId = taskId;
         this.filePath = filePath;
         this.fileType = fileType;
-        this.printerId = printerId;
+        this.printerName = printerName;
         this.copies = copies;
         this.paperSize = paperSize;
         this.duplex = duplex;
@@ -73,12 +73,12 @@ public class PrintTask {
         this.fileType = fileType;
     }
     
-    public String getPrinterId() {
-        return printerId;
+    public String getPrinterName() {
+        return printerName;
     }
     
-    public void setPrinterId(String printerId) {
-        this.printerId = printerId;
+    public void setPrinterName(String printerName) {
+        this.printerName = printerName;
     }
     
     public Integer getCopies() {
@@ -143,7 +143,7 @@ public class PrintTask {
                 "taskId='" + taskId + '\'' +
                 ", filePath='" + filePath + '\'' +
                 ", fileType='" + fileType + '\'' +
-                ", printerId='" + printerId + '\'' +
+                ", printerId='" + printerName + '\'' +
                 ", copies=" + copies +
                 ", status=" + status +
                 ", submitTime=" + submitTime +

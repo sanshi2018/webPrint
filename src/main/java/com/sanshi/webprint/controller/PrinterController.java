@@ -2,7 +2,6 @@ package com.sanshi.webprint.controller;
 
 import com.sanshi.webprint.dto.ErrorResponseDto;
 import com.sanshi.webprint.dto.PrinterDto;
-import com.sanshi.webprint.dto.PrintRequestDto;
 import com.sanshi.webprint.dto.UploadResponseDto;
 import com.sanshi.webprint.service.PrinterService;
 import com.sanshi.webprint.service.FileService;
@@ -214,8 +213,8 @@ public class PrinterController {
     public ResponseEntity<?> uploadFileAndPrint(
         @Parameter(description = "File to upload (PDF, DOC, DOCX)", required = true)
         @RequestParam("file") MultipartFile file,
-        @Parameter(description = "Target printer ID", required = true)
-        @RequestParam("printerId") String printerId,
+        @Parameter(description = "Target printer Name", required = true)
+        @RequestParam("printerName") String printerName,
         @Parameter(description = "Number of copies", example = "1")
         @RequestParam(value = "copies", defaultValue = "1") Integer copies,
         @Parameter(description = "Paper size", example = "A4")
@@ -226,13 +225,13 @@ public class PrinterController {
         @RequestParam(value = "colorMode", defaultValue = "grayscale") String colorMode
     ) throws IOException {
         logger.info("Received file upload request: file={}, printer={}, copies={}", 
-                   file.getOriginalFilename(), printerId, copies);
+                   file.getOriginalFilename(), printerName, copies);
         
         // Validate input parameters
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("File cannot be null or empty");
         }
-        if (printerId == null || printerId.trim().isEmpty()) {
+        if (printerName == null || printerName.trim().isEmpty()) {
             throw new IllegalArgumentException("Printer ID cannot be null or empty");
         }
         if (copies != null && (copies < 1 || copies > 999)) {
@@ -261,7 +260,7 @@ public class PrinterController {
         
         // Create and enqueue print task
         String taskId = printQueueService.createAndEnqueueTask(
-            filePath, fileType, printerId, copies, paperSize, duplex, colorMode
+            filePath, fileType, printerName, copies, paperSize, duplex, colorMode
         );
         
         logger.info("Print task created and enqueued: {}", taskId);
@@ -408,7 +407,7 @@ public class PrinterController {
         taskStatus.put("status", task.getStatus());
         taskStatus.put("message", task.getErrorMessage());
         taskStatus.put("fileType", task.getFileType());
-        taskStatus.put("printerId", task.getPrinterId());
+        taskStatus.put("printerId", task.getPrinterName());
         taskStatus.put("copies", task.getCopies());
         taskStatus.put("paperSize", task.getPaperSize());
         taskStatus.put("duplex", task.getDuplex());

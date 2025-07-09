@@ -102,7 +102,7 @@ public class PrintTaskScheduler {
      */
     private void processTask(PrintTask task) {
         logger.info("Processing print task: {} (file: {}, type: {}, printer: {})",
-                   task.getTaskId(), task.getFilePath(), task.getFileType(), task.getPrinterId());
+                   task.getTaskId(), task.getFilePath(), task.getFileType(), task.getPrinterName());
         
         try {
             // Update status to PROCESSING

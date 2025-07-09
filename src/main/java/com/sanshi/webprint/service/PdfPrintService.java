@@ -43,9 +43,9 @@ public class PdfPrintService {
 
         try (PDDocument document = Loader.loadPDF(pdfFile)) {
             // Find the target printer
-            PrintService printService = findPrintService(task.getPrinterId());
+            PrintService printService = findPrintService(task.getPrinterName());
             if (printService == null) {
-                throw new PrinterException("Printer not found: " + task.getPrinterId());
+                throw new PrinterException("Printer not found: " + task.getPrinterName());
             }
             
             // Create printer job
@@ -63,7 +63,7 @@ public class PdfPrintService {
             printerJob.setPageable(pageable);
             
             logger.info("Submitting print job to printer: {} (copies: {}, paper: {}, duplex: {}, color: {})",
-                    task.getPrinterId(), task.getCopies(), task.getPaperSize(), 
+                    task.getPrinterName(), task.getCopies(), task.getPaperSize(),
                     task.getDuplex(), task.getColorMode());
             
             // Execute the print job
