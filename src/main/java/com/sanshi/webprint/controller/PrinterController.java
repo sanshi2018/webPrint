@@ -162,7 +162,7 @@ public class PrinterController {
      * </ul>
      * 
      * @param file The multipart file to upload and print (required)
-     * @param printerId Target printer ID from available printers (required)
+     * @param printerName Target printer ID from available printers (required)
      * @param copies Number of copies to print (optional, default: 1)
      * @param paperSize Paper size for printing (optional, default: A4)
      * @param duplex Duplex printing mode (optional, default: simplex)
