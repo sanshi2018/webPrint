@@ -2,7 +2,7 @@ import React, { useState, useCallback, useMemo } from 'react'
 import { Layout, Typography, Button, Form, Upload, InputNumber, Select, Radio, Modal, message } from 'antd'
 import { ArrowLeftOutlined, InboxOutlined } from '@ant-design/icons'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
-import { api, showModalError } from '../api'
+import { apiService, ApiServiceError } from '../api/service'
 import type { UploadFile, UploadProps } from 'antd/es/upload'
 import type { PrintFormData } from '../types/api'
 import { TaskStorage } from '../utils/taskStorage'
@@ -122,43 +122,47 @@ const FileUploadPage: React.FC = () => {
       formData.append('duplex', values.duplex)
       formData.append('colorMode', values.colorMode)
 
-      const response = await api.upload<{ taskId: string }>('/api/print/upload', formData, undefined, {
-        loadingKey: 'file-upload',
-        loadingMessage: 'Uploading file and creating print job...',
-        successMessage: 'Print job submitted successfully!'
+      const taskId = await apiService.print.submit({
+        file: fileList[0] as any,
+        printerId: currentPrinterId,
+        copies: values.copies,
+        paperSize: values.paperSize,
+        duplex: values.duplex,
+        colorMode: values.colorMode
       })
 
-      if (response.code === 1000) {
-        const taskId = response.data.taskId
-        
-        // Store task information in localStorage
-        TaskStorage.addTask({
-          taskId,
-          fileName: fileList[0].name,
-          printerId: currentPrinterId,
-          printerName: currentPrinterName,
-          submittedAt: new Date().toISOString()
-        })
-        
-        Modal.success({
-          title: 'Print job submitted successfully!',
-          content: `Task ID: ${taskId}`,
-          onOk: () => {
-            navigate('/tasks', {
-              state: { taskId }
-            })
-          }
+      // Store task information in localStorage
+      TaskStorage.addTask({
+        taskId,
+        fileName: fileList[0].name,
+        printerId: currentPrinterId,
+        printerName: currentPrinterName,
+        submittedAt: new Date().toISOString()
+      })
+      
+      Modal.success({
+        title: 'Print job submitted successfully!',
+        content: `Task ID: ${taskId}`,
+        onOk: () => {
+          navigate('/tasks', {
+            state: { taskId }
+          })
+        }
+      })
+    } catch (error) {
+      // Error handling is done by API service
+      if (error instanceof ApiServiceError) {
+        Modal.error({
+          title: 'Print job submission failed',
+          content: error.message,
         })
       } else {
-        // Error details are handled by API interceptors
-        showModalError(
-          'Print job submission failed',
-          'Please check your file and settings, then try again.'
-        )
+        console.error('Print job submission failed:', error)
+        Modal.error({
+          title: 'Print job submission failed',
+          content: 'Please check your file and settings, then try again.',
+        })
       }
-    } catch (error) {
-      // Error handling is done by API interceptors
-      console.error('Print job submission failed:', error)
     } finally {
       setUploading(false)
     }

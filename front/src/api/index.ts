@@ -2,6 +2,7 @@ import axios, { AxiosError } from 'axios'
 import type { AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import { message, notification, Modal } from 'antd'
 import type { ApiResponse } from '../types/api'
+import { endpointBuilder } from './config'
 
 // Error code mappings for user-friendly messages
 const ERROR_MESSAGES: Record<number, string> = {
@@ -33,8 +34,11 @@ const ERROR_MESSAGES: Record<number, string> = {
  * @returns Configured axios instance with error handling
  */
 const createApiInstance = (): AxiosInstance => {
+  const config = endpointBuilder.getConfig()
+  
   const instance = axios.create({
-    timeout: 30000, // 30 seconds timeout
+    baseURL: config.baseUrl,
+    timeout: config.timeout,
     headers: {
       'Content-Type': 'application/json',
     },
@@ -44,11 +48,15 @@ const createApiInstance = (): AxiosInstance => {
   instance.interceptors.request.use(
     (config: InternalAxiosRequestConfig) => {
       // Add any common headers or authentication tokens here
-      console.log(`🚀 API Request: ${config.method?.toUpperCase()} ${config.url}`)
+      if (endpointBuilder.getConfig().enableLogging) {
+        console.log(`🚀 API Request: ${config.method?.toUpperCase()} ${config.url}`)
+      }
       return config
     },
     (error: AxiosError) => {
-      console.error('❌ Request Error:', error)
+      if (endpointBuilder.getConfig().enableLogging) {
+        console.error('❌ Request Error:', error)
+      }
       return Promise.reject(error)
     }
   )
@@ -56,7 +64,9 @@ const createApiInstance = (): AxiosInstance => {
   // Response interceptor for unified error handling
   instance.interceptors.response.use(
     (response: AxiosResponse) => {
-      console.log(`✅ API Response: ${response.status} ${response.config.url}`)
+      if (endpointBuilder.getConfig().enableLogging) {
+        console.log(`✅ API Response: ${response.status} ${response.config.url}`)
+      }
       
       // Check if response has the expected API structure
       if (response.data && typeof response.data === 'object' && 'code' in response.data) {
@@ -72,7 +82,9 @@ const createApiInstance = (): AxiosInstance => {
       return response
     },
     (error: AxiosError) => {
-      console.error('❌ API Error:', error)
+      if (endpointBuilder.getConfig().enableLogging) {
+        console.error('❌ API Error:', error)
+      }
       handleNetworkError(error)
       return Promise.reject(error)
     }

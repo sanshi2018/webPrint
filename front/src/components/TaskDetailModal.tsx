@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Modal, Descriptions, Spin, Alert, Tag, Progress } from 'antd'
 import { CloseOutlined } from '@ant-design/icons'
-import { api } from '../api'
+import { apiService, ApiServiceError } from '../api/service'
 import type { TaskStatusDto } from '../types/api'
 import { getStatusColor, getStatusText } from '../types/api'
 
@@ -30,17 +30,15 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, visible, onCl
     setTaskDetail(null)
 
     try {
-      const response = await api.get<TaskStatusDto>(`/api/print/task/${id}/status`)
-      
-      if (response.code === 1000) {
-        setTaskDetail(response.data)
+      const taskData = await apiService.tasks.getStatus(id)
+      setTaskDetail(taskData)
+    } catch (err) {
+      // Error handling is done by API service
+      if (err instanceof ApiServiceError) {
+        setError(err.message)
       } else {
         setError('Failed to fetch task details.')
       }
-    } catch (err) {
-      // Error handling is done by API interceptors
-      console.error('Failed to fetch task detail:', err)
-      setError('Failed to fetch task details.')
     } finally {
       setLoading(false)
     }

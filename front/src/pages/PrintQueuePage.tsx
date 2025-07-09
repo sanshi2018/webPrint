@@ -2,12 +2,12 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { Layout, Typography, Button, Alert } from 'antd'
 import { ArrowLeftOutlined, ReloadOutlined } from '@ant-design/icons'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { api } from '../api'
+import { apiService, ApiServiceError } from '../api/service'
 import TaskDetailModal from '../components/TaskDetailModal'
 import QueueStatusCard from '../components/QueueStatusCard'
 import TaskTable from '../components/TaskTable'
 import { TaskStorage } from '../utils/taskStorage'
-import type { QueueStatusDto, TaskStatusDto, TaskWithInfo } from '../types/api'
+import type { QueueStatusDto, TaskWithInfo } from '../types/api'
 
 const { Content } = Layout
 const { Title, Text } = Typography
@@ -48,12 +48,14 @@ const PrintQueuePage: React.FC = () => {
    */
   const fetchQueueStatus = useCallback(async () => {
     try {
-      const response = await api.get<QueueStatusDto>('/api/print/queue/status')
-      if (response.code === 1000) {
-        setQueueStatus(response.data)
-      }
+      const queueData = await apiService.queue.getStatus()
+      setQueueStatus(queueData)
     } catch (err) {
-      console.error('Failed to fetch queue status:', err)
+      if (err instanceof ApiServiceError) {
+        console.error('Failed to fetch queue status:', err.message)
+      } else {
+        console.error('Failed to fetch queue status:', err)
+      }
     }
   }, [])
 
@@ -73,23 +75,23 @@ const PrintQueuePage: React.FC = () => {
       // Fetch details for each task ID
       const taskPromises = taskIds.map(async (taskId) => {
         try {
-          const response = await api.get<TaskStatusDto>(`/api/print/task/${taskId}/status`)
-          if (response.code === 1000) {
-            const taskData = response.data
-            const storedInfo = TaskStorage.getTaskInfo(taskId)
-            
-            // Combine API data with stored info
-            return {
-              ...taskData,
-              fileName: storedInfo?.fileName,
-              printerName: storedInfo?.printerName
-            } as TaskWithInfo
-          }
+          const taskData = await apiService.tasks.getStatus(taskId)
+          const storedInfo = TaskStorage.getTaskInfo(taskId)
+          
+          // Combine API data with stored info
+          return {
+            ...taskData,
+            fileName: storedInfo?.fileName,
+            printerName: storedInfo?.printerName
+          } as TaskWithInfo
         } catch (err) {
-          console.error(`Failed to fetch task ${taskId}:`, err)
+          if (err instanceof ApiServiceError) {
+            console.error(`Failed to fetch task ${taskId}:`, err.message)
+          } else {
+            console.error(`Failed to fetch task ${taskId}:`, err)
+          }
           return null
         }
-        return null
       })
 
       const taskResults = await Promise.allSettled(taskPromises)

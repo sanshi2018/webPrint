@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Layout, Typography, Button, List, Spin, Alert, Empty } from 'antd'
 import { ReloadOutlined } from '@ant-design/icons'
-import { api } from '../api'
+import { apiService, ApiServiceError } from '../api/service'
 import PrinterCard from '../components/PrinterCard'
 import type { PrinterDto } from '../types/api'
 
@@ -25,19 +25,15 @@ const PrinterListPage: React.FC = () => {
     setError(null)
     
     try {
-      const response = await api.get<PrinterDto[]>('/api/print/printers', undefined, {
-        loadingKey: 'fetch-printers',
-        loadingMessage: 'Loading printer list...'
-      })
-      
-      if (response.code === 1000) {
-        setPrinters(response.data)
+      const printerData = await apiService.printers.list()
+      setPrinters(printerData)
+    } catch (err) {
+      // Error handling is done by API service
+      if (err instanceof ApiServiceError) {
+        setError(err.message)
       } else {
         setError('Unable to retrieve printer list.')
       }
-    } catch (err) {
-      // Error handling is done by API interceptors
-      setError('Unable to retrieve printer list.')
     } finally {
       setLoading(false)
     }

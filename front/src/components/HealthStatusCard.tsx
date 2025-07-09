@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Card, Alert, Spin, Button } from 'antd'
 import { CheckCircleOutlined, ExclamationCircleOutlined, ReloadOutlined } from '@ant-design/icons'
-import { api } from '../api'
+import { apiService, ApiServiceError } from '../api/service'
 
 interface HealthStatus {
   status: string
@@ -28,16 +28,15 @@ const HealthStatusCard: React.FC<HealthStatusCardProps> = ({ className }) => {
     setError(null)
     
     try {
-      const response = await api.get<HealthStatus>('/actuator/health')
-      if (response.code === 1000) {
-        setHealthStatus(response.data)
-      } else {
-        setError('Health check service returned an error.')
-        setHealthStatus(null)
-      }
+      const healthData = await apiService.health.check()
+      setHealthStatus(healthData)
     } catch (err) {
-      // Error handling is done by API interceptors
-      setError('Failed to fetch health status.')
+      // Error handling is done by API service
+      if (err instanceof ApiServiceError) {
+        setError(err.message)
+      } else {
+        setError('Failed to fetch health status.')
+      }
       setHealthStatus(null)
     } finally {
       setLoading(false)
