@@ -1,17 +1,16 @@
-import { useState } from 'react'
+import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom'
 import { Layout, Typography, Button } from 'antd'
 import { PrinterOutlined, HeartOutlined } from '@ant-design/icons'
 import HealthCheckPage from './pages/HealthCheckPage'
+import PrinterListPage from './pages/PrinterListPage'
+import FileUploadPage from './pages/FileUploadPage'
+import PrintQueuePage from './pages/PrintQueuePage'
 
 const { Header, Content, Footer } = Layout
 const { Title } = Typography
 
-function App() {
-  const [currentPage, setCurrentPage] = useState<'home' | 'health'>('home')
-
-  if (currentPage === 'health') {
-    return <HealthCheckPage onBack={() => setCurrentPage('home')} />
-  }
+const HomePage = () => {
+  const navigate = useNavigate()
 
   return (
     <Layout className="min-h-screen">
@@ -25,7 +24,7 @@ function App() {
           </div>
           <Button
             icon={<HeartOutlined />}
-            onClick={() => setCurrentPage('health')}
+            onClick={() => navigate('/health')}
             type="text"
             className="text-white hover:text-gray-200"
           >
@@ -47,13 +46,14 @@ function App() {
               <Button 
                 type="primary" 
                 size="large"
+                onClick={() => navigate('/')}
                 className="bg-blue-600 hover:bg-blue-700 border-blue-600"
               >
-                Get Started
+                View Printers
               </Button>
               <Button
                 icon={<HeartOutlined />}
-                onClick={() => setCurrentPage('health')}
+                onClick={() => navigate('/health')}
                 size="large"
                 className="border-blue-600 text-blue-600 hover:border-blue-700 hover:text-blue-700"
               >
@@ -68,6 +68,20 @@ function App() {
         <p className="m-0">WebPrint © 2024 - Remote Printing Solution</p>
       </Footer>
     </Layout>
+  )
+}
+
+function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<PrinterListPage />} />
+        <Route path="/home" element={<HomePage />} />
+        <Route path="/print/:printerId" element={<FileUploadPage />} />
+        <Route path="/tasks" element={<PrintQueuePage />} />
+        <Route path="/health" element={<HealthCheckPage onBack={() => window.history.back()} />} />
+      </Routes>
+    </Router>
   )
 }
 
