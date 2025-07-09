@@ -1,16 +1,33 @@
-// Task Storage Utility for managing task IDs in localStorage
+/**
+ * Task Storage Utility for managing task IDs in localStorage
+ */
 const TASK_IDS_KEY = 'webprint_task_ids'
 
+/**
+ * Interface for stored task information
+ */
 export interface StoredTaskInfo {
+  /** Task identifier */
   taskId: string
+  /** Original file name */
   fileName: string
+  /** Target printer identifier */
   printerId: string
+  /** Target printer name */
   printerName: string
+  /** ISO 8601 timestamp of submission */
   submittedAt: string
 }
 
+/**
+ * Task Storage Utility Class
+ * Manages task information persistence in localStorage
+ */
 export class TaskStorage {
-  // Add a new task ID to storage
+  /**
+   * Adds a new task to storage with automatic cleanup
+   * @param taskInfo - Complete task information to store
+   */
   static addTask(taskInfo: StoredTaskInfo): void {
     const existingTasks = this.getTasks()
     const updatedTasks = [taskInfo, ...existingTasks]
@@ -21,7 +38,10 @@ export class TaskStorage {
     localStorage.setItem(TASK_IDS_KEY, JSON.stringify(limitedTasks))
   }
 
-  // Get all stored task IDs
+  /**
+   * Gets all stored task information
+   * @returns Array of stored task information
+   */
   static getTasks(): StoredTaskInfo[] {
     try {
       const storedTasks = localStorage.getItem(TASK_IDS_KEY)
@@ -32,30 +52,46 @@ export class TaskStorage {
     }
   }
 
-  // Get task IDs only (for API calls)
+  /**
+   * Gets only task IDs for API calls
+   * @returns Array of task IDs
+   */
   static getTaskIds(): string[] {
     return this.getTasks().map(task => task.taskId)
   }
 
-  // Remove a task ID from storage
+  /**
+   * Removes a specific task from storage
+   * @param taskId - Task ID to remove
+   */
   static removeTask(taskId: string): void {
     const existingTasks = this.getTasks()
     const updatedTasks = existingTasks.filter(task => task.taskId !== taskId)
     localStorage.setItem(TASK_IDS_KEY, JSON.stringify(updatedTasks))
   }
 
-  // Clear all stored task IDs
+  /**
+   * Clears all stored task information
+   */
   static clearAllTasks(): void {
     localStorage.removeItem(TASK_IDS_KEY)
   }
 
-  // Get a specific task info by ID
+  /**
+   * Gets specific task information by ID
+   * @param taskId - Task ID to look up
+   * @returns Task information if found, undefined otherwise
+   */
   static getTaskInfo(taskId: string): StoredTaskInfo | undefined {
     const tasks = this.getTasks()
     return tasks.find(task => task.taskId === taskId)
   }
 
-  // Update task info (useful for caching additional details)
+  /**
+   * Updates existing task information
+   * @param taskId - Task ID to update
+   * @param updates - Partial updates to apply
+   */
   static updateTaskInfo(taskId: string, updates: Partial<StoredTaskInfo>): void {
     const tasks = this.getTasks()
     const taskIndex = tasks.findIndex(task => task.taskId === taskId)
@@ -66,7 +102,9 @@ export class TaskStorage {
     }
   }
 
-  // Clean up old completed tasks (older than 7 days)
+  /**
+   * Cleans up old completed tasks (older than 7 days)
+   */
   static cleanupOldTasks(): void {
     const tasks = this.getTasks()
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)

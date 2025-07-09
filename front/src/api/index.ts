@@ -28,7 +28,10 @@ const ERROR_MESSAGES: Record<number, string> = {
   5000: 'Internal server error. Please try again later or contact support.',
 }
 
-// Create axios instance with default configuration
+/**
+ * Creates a configured axios instance with interceptors for request/response handling
+ * @returns Configured axios instance with error handling
+ */
 const createApiInstance = (): AxiosInstance => {
   const instance = axios.create({
     timeout: 30000, // 30 seconds timeout
@@ -37,7 +40,7 @@ const createApiInstance = (): AxiosInstance => {
     },
   })
 
-  // Request interceptor
+  // Request interceptor for logging and authentication
   instance.interceptors.request.use(
     (config: InternalAxiosRequestConfig) => {
       // Add any common headers or authentication tokens here
@@ -50,7 +53,7 @@ const createApiInstance = (): AxiosInstance => {
     }
   )
 
-  // Response interceptor
+  // Response interceptor for unified error handling
   instance.interceptors.response.use(
     (response: AxiosResponse) => {
       console.log(`✅ API Response: ${response.status} ${response.config.url}`)
@@ -78,7 +81,11 @@ const createApiInstance = (): AxiosInstance => {
   return instance
 }
 
-// Handle API business logic errors (non-1000 codes)
+/**
+ * Handles API business logic errors (non-1000 codes) by showing appropriate notifications
+ * @param code - Error code from API response
+ * @param errorMessage - Optional custom error message
+ */
 const handleApiError = (code: number, errorMessage?: string): void => {
   const userMessage = ERROR_MESSAGES[code] || errorMessage || `Unknown error occurred (Code: ${code})`
   
@@ -106,7 +113,10 @@ const handleApiError = (code: number, errorMessage?: string): void => {
   }
 }
 
-// Handle network and HTTP errors
+/**
+ * Handles network and HTTP errors by showing appropriate notifications
+ * @param error - Axios error object
+ */
 const handleNetworkError = (error: AxiosError): void => {
   let errorMessage = 'Network request failed, please try again later.'
   

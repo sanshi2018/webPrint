@@ -1,8 +1,8 @@
-import React from 'react'
+import React, { useCallback, useMemo } from 'react'
 import { Card, Button, Typography, Tag } from 'antd'
 import { PrinterOutlined, CheckCircleOutlined, ExclamationCircleOutlined, CloseCircleOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
-import type { PrinterDto } from '../types/api'
+import type { PrinterDto, PrinterStatus } from '../types/api'
 
 const { Text } = Typography
 
@@ -11,19 +11,19 @@ interface PrinterCardProps {
   className?: string
 }
 
-const PrinterCard: React.FC<PrinterCardProps> = ({ printer, className }) => {
+const PrinterCard: React.FC<PrinterCardProps> = React.memo(({ printer, className }) => {
   const navigate = useNavigate()
 
-  const handleSelectPrinter = () => {
+  const handleSelectPrinter = useCallback(() => {
     navigate(`/print/${printer.id}`, {
       state: {
         printerId: printer.id,
         printerName: printer.name
       }
     })
-  }
+  }, [navigate, printer.id, printer.name])
 
-  const getStatusColor = (status: PrinterDto['status']) => {
+  const getStatusColor = useCallback((status: PrinterStatus) => {
     switch (status) {
       case 'online':
         return 'success'
@@ -36,9 +36,9 @@ const PrinterCard: React.FC<PrinterCardProps> = ({ printer, className }) => {
       default:
         return 'default'
     }
-  }
+  }, [])
 
-  const getStatusIcon = (status: PrinterDto['status']) => {
+  const getStatusIcon = useCallback((status: PrinterStatus) => {
     switch (status) {
       case 'online':
         return <CheckCircleOutlined />
@@ -51,9 +51,9 @@ const PrinterCard: React.FC<PrinterCardProps> = ({ printer, className }) => {
       default:
         return <PrinterOutlined />
     }
-  }
+  }, [])
 
-  const getStatusText = (status: PrinterDto['status']) => {
+  const getStatusText = useCallback((status: PrinterStatus) => {
     switch (status) {
       case 'online':
         return 'Online'
@@ -66,14 +66,17 @@ const PrinterCard: React.FC<PrinterCardProps> = ({ printer, className }) => {
       default:
         return 'Unknown'
     }
-  }
+  }, [])
 
-  const isDisabled = printer.status === 'offline' || printer.status === 'error'
+  const isDisabled = useMemo(() => 
+    printer.status === 'offline' || printer.status === 'error', 
+    [printer.status]
+  )
 
   return (
     <Card
       className={`w-full md:w-80 shadow-md rounded-lg overflow-hidden hover:shadow-lg transition-shadow duration-300 ${className || ''}`}
-      bodyStyle={{ padding: '20px' }}
+      styles={{ body: { padding: '20px' } }}
     >
       <div className="flex items-center space-x-3 mb-4">
         <PrinterOutlined className="text-blue-600 text-2xl" />
@@ -125,6 +128,6 @@ const PrinterCard: React.FC<PrinterCardProps> = ({ printer, className }) => {
       )}
     </Card>
   )
-}
+})
 
 export default PrinterCard 

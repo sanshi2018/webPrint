@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useCallback, useMemo } from 'react'
 import { Layout, Typography, Button, Form, Upload, InputNumber, Select, Radio, Modal, message } from 'antd'
 import { ArrowLeftOutlined, InboxOutlined } from '@ant-design/icons'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
@@ -25,6 +25,10 @@ interface LocationState {
   printerName?: string
 }
 
+/**
+ * File Upload Page Component
+ * Allows users to upload files and configure print settings for a selected printer
+ */
 const FileUploadPage: React.FC = () => {
   const navigate = useNavigate()
   const { printerId } = useParams<{ printerId: string }>()
@@ -38,13 +42,21 @@ const FileUploadPage: React.FC = () => {
   const currentPrinterId = printerId || state?.printerId
   const currentPrinterName = state?.printerName || `Printer ${currentPrinterId}`
 
-  const handleBack = () => {
+  /**
+   * Handles back button navigation
+   */
+  const handleBack = useCallback(() => {
     navigate(-1)
-  }
+  }, [navigate])
 
-  const validateFile = (file: File): boolean => {
+  /**
+   * Validates uploaded file type and size
+   * @param file - The file to validate
+   * @returns True if file is valid, false otherwise
+   */
+  const validateFile = useCallback((file: File): boolean => {
     // Check file type
-    const isValidType = SUPPORTED_MIME_TYPES.includes(file.type) || 
+    const isValidType = SUPPORTED_MIME_TYPES.includes(file.type as any) || 
                        SUPPORTED_FILE_TYPES.some(ext => file.name.toLowerCase().endsWith(ext))
     
     if (!isValidType) {
@@ -59,9 +71,9 @@ const FileUploadPage: React.FC = () => {
     }
 
     return true
-  }
+  }, [])
 
-  const uploadProps: UploadProps = {
+  const uploadProps: UploadProps = useMemo(() => ({
     name: 'file',
     multiple: false,
     maxCount: 1,
@@ -82,9 +94,13 @@ const FileUploadPage: React.FC = () => {
       const { fileList: newFileList } = info
       setFileList(newFileList)
     }
-  }
+  }), [fileList, validateFile])
 
-  const handleSubmit = async (values: PrintFormData) => {
+  /**
+   * Handles form submission for print job creation
+   * @param values - Form data with print settings
+   */
+  const handleSubmit = useCallback(async (values: PrintFormData) => {
     if (fileList.length === 0) {
       message.error('Please select a file to print.')
       return
@@ -146,7 +162,15 @@ const FileUploadPage: React.FC = () => {
     } finally {
       setUploading(false)
     }
-  }
+  }, [fileList, currentPrinterId, currentPrinterName, navigate])
+
+  // Memoize form initial values
+  const initialValues = useMemo(() => ({
+    copies: 1,
+    paperSize: 'A4' as const,
+    duplex: 'simplex' as const,
+    colorMode: 'grayscale' as const
+  }), [])
 
   return (
     <Layout className="min-h-screen bg-gray-100">
@@ -176,12 +200,7 @@ const FileUploadPage: React.FC = () => {
               form={form}
               layout="vertical"
               onFinish={handleSubmit}
-              initialValues={{
-                copies: 1,
-                paperSize: 'A4',
-                duplex: 'simplex',
-                colorMode: 'grayscale'
-              }}
+              initialValues={initialValues}
             >
               {/* File Upload Area */}
               <Form.Item

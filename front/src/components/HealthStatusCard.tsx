@@ -11,11 +11,18 @@ interface HealthStatusCardProps {
   className?: string
 }
 
+/**
+ * Health Status Card Component
+ * Displays backend service health status with real-time updates
+ */
 const HealthStatusCard: React.FC<HealthStatusCardProps> = ({ className }) => {
   const [loading, setLoading] = useState<boolean>(false)
   const [healthStatus, setHealthStatus] = useState<HealthStatus | null>(null)
   const [error, setError] = useState<string | null>(null)
 
+  /**
+   * Fetches health status from backend API
+   */
   const fetchHealthStatus = async () => {
     setLoading(true)
     setError(null)
@@ -41,10 +48,16 @@ const HealthStatusCard: React.FC<HealthStatusCardProps> = ({ className }) => {
     fetchHealthStatus()
   }, [])
 
+  /**
+   * Handles refresh button click
+   */
   const handleRefresh = () => {
     fetchHealthStatus()
   }
 
+  /**
+   * Renders the card content based on loading/error/data state
+   */
   const renderContent = () => {
     if (loading) {
       return (

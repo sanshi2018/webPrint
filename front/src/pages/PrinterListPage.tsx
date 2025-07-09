@@ -8,11 +8,18 @@ import type { PrinterDto } from '../types/api'
 const { Content } = Layout
 const { Title } = Typography
 
+/**
+ * Printer List Page Component
+ * Displays a list of available printers with their status and allows selection
+ */
 const PrinterListPage: React.FC = () => {
   const [printers, setPrinters] = useState<PrinterDto[]>([])
   const [loading, setLoading] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
 
+  /**
+   * Fetches printer list from API
+   */
   const fetchPrinters = async () => {
     setLoading(true)
     setError(null)
@@ -40,10 +47,16 @@ const PrinterListPage: React.FC = () => {
     fetchPrinters()
   }, [])
 
+  /**
+   * Handles refresh button click
+   */
   const handleRefresh = () => {
     fetchPrinters()
   }
 
+  /**
+   * Renders the main content based on loading/error/data state
+   */
   const renderContent = () => {
     if (loading) {
       return (

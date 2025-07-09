@@ -11,11 +11,19 @@ interface TaskDetailModalProps {
   onClose: () => void
 }
 
+/**
+ * Task Detail Modal Component
+ * Displays detailed information about a specific print task
+ */
 const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, visible, onClose }) => {
   const [loading, setLoading] = useState<boolean>(false)
   const [taskDetail, setTaskDetail] = useState<TaskStatusDto | null>(null)
   const [error, setError] = useState<string | null>(null)
 
+  /**
+   * Fetches task details from API
+   * @param id - Task ID to fetch details for
+   */
   const fetchTaskDetail = async (id: string) => {
     setLoading(true)
     setError(null)
@@ -44,12 +52,20 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, visible, onCl
     }
   }, [visible, taskId])
 
+  /**
+   * Handles modal close and cleanup
+   */
   const handleClose = () => {
     setTaskDetail(null)
     setError(null)
     onClose()
   }
 
+  /**
+   * Formats ISO date string to localized date/time
+   * @param dateTime - ISO date string
+   * @returns Formatted date/time string
+   */
   const formatDateTime = (dateTime: string) => {
     try {
       return new Date(dateTime).toLocaleString()
@@ -58,6 +74,9 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, visible, onCl
     }
   }
 
+  /**
+   * Renders the modal content based on loading/error/data state
+   */
   const renderContent = () => {
     if (loading) {
       return (
@@ -119,7 +138,8 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, visible, onCl
           bordered
           column={1}
           size="small"
-          labelStyle={{ width: '30%', fontWeight: 'bold' }}
+          labelStyle={{ width: '30%' }}
+          className="[&_.ant-descriptions-item-label]:font-bold"
         >
           <Descriptions.Item label="Task ID">
             <code className="bg-gray-100 px-2 py-1 rounded text-sm">
