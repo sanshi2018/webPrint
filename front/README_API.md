@@ -55,11 +55,11 @@ baseUrl: 'http://localhost:8080'
 enableLogging: true
 
 // Staging
-baseUrl: 'http://staging.webprint.com:8080'
+baseUrl: 'http://localhost:8080'
 enableLogging: true
 
 // Production
-baseUrl: 'https://api.webprint.com'
+baseUrl: 'http://localhost'
 enableLogging: false
 ```
 

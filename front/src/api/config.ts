@@ -148,13 +148,13 @@ export const ENV_CONFIGS = {
     apiVersion: '/api',
   },
   staging: {
-    baseUrl: 'http://staging.webprint.com:8080',
+    baseUrl: 'http://localhost:8080',
     timeout: 30000,
     enableLogging: true,
     apiVersion: '/api',
   },
   production: {
-    baseUrl: 'https://api.webprint.com',
+    baseUrl: 'http://localhost',
     timeout: 30000,
     enableLogging: false,
     apiVersion: '/api',

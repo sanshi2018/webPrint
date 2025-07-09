@@ -111,12 +111,12 @@ export const environmentConfig = {
     timeout: 30000,
   },
   staging: {
-    apiBaseUrl: 'http://staging.webprint.com:8080',
+    apiBaseUrl: 'http://localhost:8080',
     enableLogging: true,
     timeout: 30000,
   },
   production: {
-    apiBaseUrl: 'https://api.webprint.com',
+    apiBaseUrl: 'http://localhost',
     enableLogging: false,
     timeout: 30000,
   },
