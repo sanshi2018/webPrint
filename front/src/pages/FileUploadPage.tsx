@@ -2,9 +2,9 @@ import React, { useState } from 'react'
 import { Layout, Typography, Button, Form, Upload, InputNumber, Select, Radio, Modal, message } from 'antd'
 import { ArrowLeftOutlined, InboxOutlined } from '@ant-design/icons'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
-import axios from 'axios'
+import { api, showModalError } from '../api'
 import type { UploadFile, UploadProps } from 'antd/es/upload'
-import type { PrintFormData, ApiResponse } from '../types/api'
+import type { PrintFormData } from '../types/api'
 import { TaskStorage } from '../utils/taskStorage'
 import { 
   PAPER_SIZE_OPTIONS, 
@@ -106,14 +106,14 @@ const FileUploadPage: React.FC = () => {
       formData.append('duplex', values.duplex)
       formData.append('colorMode', values.colorMode)
 
-      const response = await axios.post<ApiResponse<{ taskId: string }>>('/api/print/upload', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+      const response = await api.upload<{ taskId: string }>('/api/print/upload', formData, undefined, {
+        loadingKey: 'file-upload',
+        loadingMessage: 'Uploading file and creating print job...',
+        successMessage: 'Print job submitted successfully!'
       })
 
-      if (response.data.code === 1000) {
-        const taskId = response.data.data.taskId
+      if (response.code === 1000) {
+        const taskId = response.data.taskId
         
         // Store task information in localStorage
         TaskStorage.addTask({
@@ -134,33 +134,15 @@ const FileUploadPage: React.FC = () => {
           }
         })
       } else {
-        const errorMessages: { [key: number]: string } = {
-          2001: 'Unsupported file format.',
-          2002: 'File size exceeds limit.',
-          2003: 'File upload failed.',
-          3001: 'Printer not found.',
-          3002: 'Printer offline.',
-          3003: 'Printer busy.',
-          3004: 'Printer error.',
-          3005: 'Invalid print parameters.',
-          3006: 'Print job creation failed.',
-          4001: 'Authentication failed.',
-          5000: 'Internal server error.'
-        }
-
-        const errorMessage = errorMessages[response.data.code] || 'Unknown error occurred.'
-        
-        Modal.error({
-          title: 'Print job submission failed',
-          content: `${errorMessage} (Error Code: ${response.data.code})`
-        })
+        // Error details are handled by API interceptors
+        showModalError(
+          'Print job submission failed',
+          'Please check your file and settings, then try again.'
+        )
       }
     } catch (error) {
+      // Error handling is done by API interceptors
       console.error('Print job submission failed:', error)
-      Modal.error({
-        title: 'Print job submission failed',
-        content: 'Network error or server unavailable. Please try again later. (Error Code: 5000)'
-      })
     } finally {
       setUploading(false)
     }

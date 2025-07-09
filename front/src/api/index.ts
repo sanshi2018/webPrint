@@ -1,7 +1,7 @@
 import axios, { AxiosError } from 'axios'
 import type { AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import { message, notification, Modal } from 'antd'
-import type { ApiResponse, ApiError } from '../types/api'
+import type { ApiResponse } from '../types/api'
 
 // Error code mappings for user-friendly messages
 const ERROR_MESSAGES: Record<number, string> = {
@@ -233,8 +233,127 @@ export const showSuccess = (successMessage: string, duration = 3): void => {
   message.success(successMessage, duration)
 }
 
+// Loading notification utilities
+export class LoadingManager {
+  private static loadingKeys: Map<string, () => void> = new Map()
+
+  // Show loading message for long-running operations
+  static showLoading(key: string, loadingMessage = 'Processing...'): void {
+    const hide = message.loading(loadingMessage, 0) // 0 means no auto-hide
+    this.loadingKeys.set(key, hide)
+  }
+
+  // Hide loading message
+  static hideLoading(key: string): void {
+    const hide = this.loadingKeys.get(key)
+    if (hide) {
+      hide()
+      this.loadingKeys.delete(key)
+    }
+  }
+
+  // Show loading and automatically hide on completion
+  static async withLoading<T>(
+    key: string,
+    operation: () => Promise<T>,
+    loadingMessage = 'Processing...',
+    successMessage?: string
+  ): Promise<T> {
+    this.showLoading(key, loadingMessage)
+    
+    try {
+      const result = await operation()
+      
+      if (successMessage) {
+        this.showSuccess(successMessage)
+      }
+      
+      return result
+    } catch (error) {
+      // Error is already handled by interceptors
+      throw error
+    } finally {
+      this.hideLoading(key)
+    }
+  }
+
+  // Helper method for success messages
+  private static showSuccess(successMessage: string): void {
+    message.success(successMessage, 3)
+  }
+}
+
+// Enhanced API request methods with loading support
+export const apiRequestWithLoading = {
+  // GET request with optional loading
+  get: async <T = any>(
+    url: string, 
+    config?: any,
+    options?: {
+      loadingKey?: string
+      loadingMessage?: string
+      successMessage?: string
+    }
+  ): Promise<ApiResponse<T>> => {
+    if (options?.loadingKey) {
+      return LoadingManager.withLoading(
+        options.loadingKey,
+        () => apiRequest.get<T>(url, config),
+        options.loadingMessage,
+        options.successMessage
+      )
+    }
+    return apiRequest.get<T>(url, config)
+  },
+
+  // POST request with optional loading
+  post: async <T = any>(
+    url: string, 
+    data?: any, 
+    config?: any,
+    options?: {
+      loadingKey?: string
+      loadingMessage?: string
+      successMessage?: string
+    }
+  ): Promise<ApiResponse<T>> => {
+    if (options?.loadingKey) {
+      return LoadingManager.withLoading(
+        options.loadingKey,
+        () => apiRequest.post<T>(url, data, config),
+        options.loadingMessage,
+        options.successMessage
+      )
+    }
+    return apiRequest.post<T>(url, data, config)
+  },
+
+  // File upload with loading and progress
+  upload: async <T = any>(
+    url: string, 
+    formData: FormData, 
+    onProgress?: (progress: number) => void,
+    options?: {
+      loadingKey?: string
+      loadingMessage?: string
+      successMessage?: string
+    }
+  ): Promise<ApiResponse<T>> => {
+    if (options?.loadingKey) {
+      return LoadingManager.withLoading(
+        options.loadingKey,
+        () => apiRequest.upload<T>(url, formData, onProgress),
+        options.loadingMessage,
+        options.successMessage
+      )
+    }
+    return apiRequest.upload<T>(url, formData, onProgress)
+  },
+}
+
 // Export the raw axios instance for edge cases
 export { api as axiosInstance }
 
-// Export default API instance
+// Export both the basic and enhanced API instances
+export { apiRequestWithLoading as api }
 export default apiRequest 

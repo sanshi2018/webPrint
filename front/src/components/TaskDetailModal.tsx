@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { Modal, Descriptions, Spin, Alert, Tag, Progress } from 'antd'
 import { CloseOutlined } from '@ant-design/icons'
-import axios from 'axios'
-import type { TaskStatusDto, ApiResponse } from '../types/api'
+import { api } from '../api'
+import type { TaskStatusDto } from '../types/api'
 import { getStatusColor, getStatusText } from '../types/api'
 
 interface TaskDetailModalProps {
@@ -22,18 +22,17 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, visible, onCl
     setTaskDetail(null)
 
     try {
-      const response = await axios.get<ApiResponse<TaskStatusDto>>(`/api/print/task/${id}/status`)
+      const response = await api.get<TaskStatusDto>(`/api/print/task/${id}/status`)
       
-      if (response.data.code === 1000) {
-        setTaskDetail(response.data.data)
-      } else if (response.data.code === 4001) {
-        setError('Task does not exist or has expired. (Error Code: 4001)')
+      if (response.code === 1000) {
+        setTaskDetail(response.data)
       } else {
-        setError(`Failed to fetch task details. (Error Code: ${response.data.code})`)
+        setError('Failed to fetch task details.')
       }
     } catch (err) {
+      // Error handling is done by API interceptors
       console.error('Failed to fetch task detail:', err)
-      setError('Network error or server unavailable. Please try again later.')
+      setError('Failed to fetch task details.')
     } finally {
       setLoading(false)
     }

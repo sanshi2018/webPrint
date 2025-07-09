@@ -3,10 +3,10 @@ import { Layout, Typography, Button, Card, Descriptions, Table, Tag, Progress, S
 import { ArrowLeftOutlined, ReloadOutlined, PlayCircleOutlined, PauseCircleOutlined, StopOutlined } from '@ant-design/icons'
 import { useNavigate, useLocation } from 'react-router-dom'
 import type { ColumnsType } from 'antd/es/table'
-import axios from 'axios'
+import { api } from '../api'
 import TaskDetailModal from '../components/TaskDetailModal'
 import { TaskStorage } from '../utils/taskStorage'
-import type { QueueStatusDto, TaskStatusDto, ApiResponse } from '../types/api'
+import type { QueueStatusDto, TaskStatusDto } from '../types/api'
 import { getStatusColor, getStatusText } from '../types/api'
 
 const { Content } = Layout
@@ -44,9 +44,9 @@ const PrintQueuePage: React.FC = () => {
   // Fetch queue status
   const fetchQueueStatus = useCallback(async () => {
     try {
-      const response = await axios.get<ApiResponse<QueueStatusDto>>('/api/print/queue/status')
-      if (response.data.code === 1000) {
-        setQueueStatus(response.data.data)
+      const response = await api.get<QueueStatusDto>('/api/print/queue/status')
+      if (response.code === 1000) {
+        setQueueStatus(response.data)
       }
     } catch (err) {
       console.error('Failed to fetch queue status:', err)
@@ -67,9 +67,9 @@ const PrintQueuePage: React.FC = () => {
       // Fetch details for each task ID
       const taskPromises = taskIds.map(async (taskId) => {
         try {
-          const response = await axios.get<ApiResponse<TaskStatusDto>>(`/api/print/task/${taskId}/status`)
-          if (response.data.code === 1000) {
-            const taskData = response.data.data
+          const response = await api.get<TaskStatusDto>(`/api/print/task/${taskId}/status`)
+          if (response.code === 1000) {
+            const taskData = response.data
             const storedInfo = TaskStorage.getTaskInfo(taskId)
             
             // Combine API data with stored info

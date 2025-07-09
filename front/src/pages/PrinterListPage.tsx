@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { Layout, Typography, Button, List, Spin, Alert, Empty } from 'antd'
 import { ReloadOutlined } from '@ant-design/icons'
-import axios from 'axios'
+import { api } from '../api'
 import PrinterCard from '../components/PrinterCard'
-import type { PrinterDto, ApiResponse } from '../types/api'
+import type { PrinterDto } from '../types/api'
 
 const { Content } = Layout
 const { Title } = Typography
@@ -18,16 +18,19 @@ const PrinterListPage: React.FC = () => {
     setError(null)
     
     try {
-      const response = await axios.get<ApiResponse<PrinterDto[]>>('/api/print/printers')
+      const response = await api.get<PrinterDto[]>('/api/print/printers', undefined, {
+        loadingKey: 'fetch-printers',
+        loadingMessage: 'Loading printer list...'
+      })
       
-      if (response.data.code === 1000) {
-        setPrinters(response.data.data)
+      if (response.code === 1000) {
+        setPrinters(response.data)
       } else {
-        setError(`Unable to retrieve printer list. Please check your network connection or contact the administrator. (Error Code: ${response.data.code})`)
+        setError('Unable to retrieve printer list.')
       }
     } catch (err) {
-      console.error('Failed to fetch printers:', err)
-      setError('Unable to retrieve printer list. Please check your network connection or contact the administrator. (Error Code: 5000)')
+      // Error handling is done by API interceptors
+      setError('Unable to retrieve printer list.')
     } finally {
       setLoading(false)
     }

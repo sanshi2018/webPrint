@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Card, Alert, Spin, Button } from 'antd'
 import { CheckCircleOutlined, ExclamationCircleOutlined, ReloadOutlined } from '@ant-design/icons'
-import axios from 'axios'
+import { api } from '../api'
 
 interface HealthStatus {
   status: string
@@ -21,10 +21,16 @@ const HealthStatusCard: React.FC<HealthStatusCardProps> = ({ className }) => {
     setError(null)
     
     try {
-      const response = await axios.get<HealthStatus>('http://localhost:8080/actuator/health')
-      setHealthStatus(response.data)
+      const response = await api.get<HealthStatus>('/actuator/health')
+      if (response.code === 1000) {
+        setHealthStatus(response.data)
+      } else {
+        setError('Health check service returned an error.')
+        setHealthStatus(null)
+      }
     } catch (err) {
-      setError('Failed to fetch health status. Please check network connection or backend service.')
+      // Error handling is done by API interceptors
+      setError('Failed to fetch health status.')
       setHealthStatus(null)
     } finally {
       setLoading(false)
